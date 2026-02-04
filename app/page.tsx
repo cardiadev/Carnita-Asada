@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { toast } from 'sonner'
 
 export default function Home() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
-  const [eventDate, setEventDate] = useState('')
+  const [eventDate, setEventDate] = useState<Date | undefined>(undefined)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +36,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
-          eventDate: new Date(eventDate).toISOString(),
+          eventDate: eventDate.toISOString(),
         }),
       })
 
@@ -52,13 +53,6 @@ export default function Home() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Obtener fecha mínima (ahora)
-  const getMinDateTime = () => {
-    const now = new Date()
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-    return now.toISOString().slice(0, 16)
   }
 
   return (
@@ -94,14 +88,13 @@ export default function Home() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventDate">Fecha y hora</Label>
-                <Input
-                  id="eventDate"
-                  type="datetime-local"
+                <Label>Fecha y hora</Label>
+                <DateTimePicker
                   value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  min={getMinDateTime()}
+                  onChange={setEventDate}
+                  minDate={new Date()}
                   disabled={isLoading}
+                  placeholder="Seleccionar fecha y hora"
                 />
               </div>
 

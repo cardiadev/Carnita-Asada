@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet'
+import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
+import { TemplateSelector } from '@/components/shopping/template-selector'
 import type { ShoppingItem, Category, SuggestedItem } from '@/types/database'
 
 interface ShoppingPageProps {
@@ -189,40 +191,57 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
           </p>
         </div>
 
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm">
-              Sugerencias
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Sugerencias</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-4 overflow-y-auto max-h-[calc(100vh-120px)]">
-              {categories.map((category) => (
-                <div key={category.id}>
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                    {category.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {category.suggested_items?.map((suggestion) => (
-                      <Button
-                        key={suggestion.id}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAddSuggestion(suggestion)}
-                        className="text-sm"
-                      >
-                        + {suggestion.name}
-                      </Button>
-                    ))}
+        <div className="flex gap-2">
+          <TemplateSelector
+            eventUuid={eventUuid}
+            onItemsAdded={() => {
+              // Refetch items
+              fetch(`/api/shopping?eventId=${eventId}`)
+                .then(res => res.json())
+                .then(data => setItems(data))
+            }}
+            categories={categories.map(c => ({ id: c.id, name: c.name }))}
+          />
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm">
+                💡 Sugerencias
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-md">
+              <SheetHeader className="mb-4">
+                <SheetTitle>Sugerencias</SheetTitle>
+                <SheetDescription>
+                  Agrega items rápidamente tocando los botones
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-160px)] pr-2">
+                {categories.map((category, index) => (
+                  <div key={category.id}>
+                    {index > 0 && <Separator className="mb-4" />}
+                    <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100 mb-3">
+                      {category.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {category.suggested_items?.map((suggestion) => (
+                        <Button
+                          key={suggestion.id}
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleAddSuggestion(suggestion)}
+                          className="text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+                        >
+                          + {suggestion.name}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       {/* Formulario agregar */}
@@ -325,11 +344,10 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleTogglePurchased(item)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            item.is_purchased
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
                               ? 'bg-green-500 border-green-500 text-white'
                               : 'border-zinc-300 dark:border-zinc-600'
-                          }`}
+                            }`}
                         >
                           {item.is_purchased && (
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -351,9 +369,9 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                         className="text-red-500 hover:text-red-600"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"/>
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                         </svg>
                       </Button>
                     </div>
@@ -378,11 +396,10 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleTogglePurchased(item)}
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          item.is_purchased
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
                             ? 'bg-green-500 border-green-500 text-white'
                             : 'border-zinc-300 dark:border-zinc-600'
-                        }`}
+                          }`}
                       >
                         {item.is_purchased && (
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -404,9 +421,9 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                       className="text-red-500 hover:text-red-600"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                       </svg>
                     </Button>
                   </div>
