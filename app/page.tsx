@@ -1,65 +1,136 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
 
 export default function Home() {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [title, setTitle] = useState('')
+  const [eventDate, setEventDate] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!title.trim()) {
+      toast.error('Por favor ingresa un título para tu carnita')
+      return
+    }
+
+    if (!eventDate) {
+      toast.error('Por favor selecciona la fecha del evento')
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          eventDate: new Date(eventDate).toISOString(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al crear el evento')
+      }
+
+      toast.success('¡Evento creado!')
+      router.push(`/${data.nanoId}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al crear el evento')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Obtener fecha mínima (ahora)
+  const getMinDateTime = () => {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 16)
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-100 dark:from-zinc-900 dark:to-zinc-800">
+      <main className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-screen">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+            Carnita Asada
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg text-zinc-600 dark:text-zinc-400">
+            Organiza tu parrillada con amigos
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Crear nuevo evento</CardTitle>
+            <CardDescription>
+              Ingresa los datos de tu carnita asada para comenzar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Nombre del evento</Label>
+                <Input
+                  id="title"
+                  placeholder="Ej: Carnita de cumpleaños de Juan"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventDate">Fecha y hora</Label>
+                <Input
+                  id="eventDate"
+                  type="datetime-local"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  min={getMinDateTime()}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-700"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creando...' : 'Crear Carnita Asada'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <footer className="mt-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          <p>
+            Creado por{' '}
+            <a
+              href="https://github.com/cardiadev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-600 hover:underline"
+            >
+              @cardiadev
+            </a>
+            {' '}(Carlos Díaz)
+          </p>
+        </footer>
       </main>
     </div>
-  );
+  )
 }
