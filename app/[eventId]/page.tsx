@@ -4,7 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Countdown } from '@/components/event/countdown'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils/currency'
+import { DollarSign, Users, MessageCircle, ArrowRight } from 'lucide-react'
 
 interface EventPageProps {
   params: Promise<{ eventId: string }>
@@ -80,57 +82,62 @@ export default async function EventPage({ params }: EventPageProps) {
   const pendingPayments = balances.filter(b => b.balance < 0)
   const completedPayments = balances.filter(b => b.balance >= 0)
 
+  // WhatsApp reminder function
+  const getWhatsAppUrl = (personName: string) => {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `https://carnita-asada.vercel.app`
+    const message = `¡Hola ${personName}! 👋\n\n🔥 No olvides hacer tus pagos de la carnita asada "${event.title}".\n\n👉 ${appUrl}/${eventId}/summary\n\n¡Nos vemos pronto! 🥩`
+    return `https://wa.me/?text=${encodeURIComponent(message)}`
+  }
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-          {event.title}
-        </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          {attendeesCount} {attendeesCount === 1 ? 'asistente' : 'asistentes'}
-        </p>
-      </div>
-
-      {/* Countdown */}
+      {/* Countdown with Title & Attendees */}
       <div className="mb-6">
         <Countdown
           targetDate={event.event_date}
+          title={event.title}
+          attendeesCount={attendeesCount}
           location={event.location}
           cancelled={!!event.cancelled_at}
         />
       </div>
 
-      {/* Stats */}
+      {/* Stats - More Visual */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Total gastado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {formatCurrency(totalExpenses)}
-            </p>
+        <Card className="bg-gradient-to-br from-orange-500 to-amber-500 text-white border-0 shadow-lg">
+          <CardContent className="py-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <DollarSign className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm text-white/80">Total gastado</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Por persona
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              {formatCurrency(perPerson)}
-            </p>
-            {activeCount !== attendeesCount && (
-              <p className="text-xs text-zinc-500 mt-1">
-                Entre {activeCount} personas
-              </p>
-            )}
+        <Card className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white border-0 shadow-lg">
+          <CardContent className="py-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm text-white/80">Por persona</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(perPerson)}
+                </p>
+                {activeCount !== attendeesCount && (
+                  <p className="text-xs text-white/70">
+                    Entre {activeCount} personas
+                  </p>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -179,17 +186,28 @@ export default async function EventPage({ params }: EventPageProps) {
                     {person.name}
                   </span>
                 </div>
-                <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                  Debe {formatCurrency(Math.abs(person.balance))}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                    Debe {formatCurrency(Math.abs(person.balance))}
+                  </Badge>
+                  <a
+                    href={getWhatsAppUrl(person.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
+                    title="Enviar recordatorio por WhatsApp"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
             ))}
-            <Link
-              href={`/${eventId}/summary`}
-              className="block text-center text-sm text-orange-600 hover:underline mt-2"
-            >
-              Ver pagos y transferencias →
-            </Link>
+            <Button asChild className="w-full mt-4" variant="default">
+              <Link href={`/${eventId}/summary`}>
+                Ver pagos y transferencias
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -215,18 +233,16 @@ export default async function EventPage({ params }: EventPageProps) {
           <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
             <p>Agrega asistentes y registra gastos para ver el estado de pagos</p>
             <div className="flex justify-center gap-4 mt-4">
-              <Link
-                href={`/${eventId}/attendees`}
-                className="text-orange-600 hover:underline"
-              >
-                Agregar asistentes
-              </Link>
-              <Link
-                href={`/${eventId}/expenses`}
-                className="text-orange-600 hover:underline"
-              >
-                Registrar gastos
-              </Link>
+              <Button asChild variant="outline">
+                <Link href={`/${eventId}/attendees`}>
+                  Agregar asistentes
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/${eventId}/expenses`}>
+                  Registrar gastos
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -234,4 +250,3 @@ export default async function EventPage({ params }: EventPageProps) {
     </div>
   )
 }
-

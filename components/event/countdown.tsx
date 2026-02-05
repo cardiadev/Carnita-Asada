@@ -3,15 +3,18 @@
 import { useCountdown } from '@/hooks/use-countdown'
 import { formatDateTime } from '@/lib/utils/date'
 import { Card, CardContent } from '@/components/ui/card'
-import { MapPin } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { MapPin, Users } from 'lucide-react'
 
 interface CountdownProps {
   targetDate: Date | string
+  title?: string
+  attendeesCount?: number
   location?: string | null
   cancelled?: boolean
 }
 
-export function Countdown({ targetDate, location, cancelled }: CountdownProps) {
+export function Countdown({ targetDate, title, attendeesCount, location, cancelled }: CountdownProps) {
   const { days, hours, minutes, seconds, isExpired } = useCountdown(targetDate)
 
   const targetDateObj = typeof targetDate === 'string' ? new Date(targetDate) : targetDate
@@ -19,23 +22,45 @@ export function Countdown({ targetDate, location, cancelled }: CountdownProps) {
   const isToday = targetDateObj.toDateString() === now.toDateString()
   const isPast = targetDateObj < now && !isToday
 
+  // Header with title and attendees
+  const EventHeader = () => (
+    <div className="text-center mb-4">
+      {title && (
+        <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+          {title}
+        </h2>
+      )}
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        {attendeesCount !== undefined && attendeesCount > 0 && (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <Users className="h-3 w-3" />
+            {attendeesCount} {attendeesCount === 1 ? 'asistente' : 'asistentes'}
+          </Badge>
+        )}
+        {location && (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            {location}
+          </Badge>
+        )}
+      </div>
+    </div>
+  )
+
   // Cancelled state
   if (cancelled) {
     return (
       <Card className="bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700">
-        <CardContent className="py-6 text-center">
-          <p className="text-2xl font-bold text-zinc-600 dark:text-zinc-400">
-            😢 Se canceló la carnita...
-          </p>
-          <p className="text-lg text-zinc-500 dark:text-zinc-500 mt-2">
-            ¡Otra será, amigos!
-          </p>
-          {location && (
-            <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-2 flex items-center justify-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {location}
+        <CardContent className="py-6">
+          <EventHeader />
+          <div className="text-center">
+            <p className="text-2xl font-bold text-zinc-600 dark:text-zinc-400">
+              😢 Se canceló la carnita...
             </p>
-          )}
+            <p className="text-lg text-zinc-500 dark:text-zinc-500 mt-2">
+              ¡Otra será, amigos!
+            </p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -45,22 +70,19 @@ export function Countdown({ targetDate, location, cancelled }: CountdownProps) {
   if (isPast) {
     return (
       <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
-        <CardContent className="py-6 text-center">
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-            🍖 ¡La carnita asada ya pasó!
-          </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
-            Esperamos que la hayan pasado increíble
-          </p>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            {formatDateTime(targetDate)}
-          </p>
-          {location && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 flex items-center justify-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {location}
+        <CardContent className="py-6">
+          <EventHeader />
+          <div className="text-center">
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              🍖 ¡La carnita asada ya pasó!
             </p>
-          )}
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+              Esperamos que la hayan pasado increíble
+            </p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              {formatDateTime(targetDate)}
+            </p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -70,19 +92,16 @@ export function Countdown({ targetDate, location, cancelled }: CountdownProps) {
   if (isExpired || isToday) {
     return (
       <Card className="bg-orange-100 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
-        <CardContent className="py-6 text-center">
-          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-            🔥 ¡Se armó la carnita asada!
-          </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
-            {formatDateTime(targetDate)}
-          </p>
-          {location && (
-            <p className="text-sm text-orange-600 dark:text-orange-400 mt-2 flex items-center justify-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {location}
+        <CardContent className="py-6">
+          <EventHeader />
+          <div className="text-center">
+            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              🔥 ¡Se armó la carnita asada!
             </p>
-          )}
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+              {formatDateTime(targetDate)}
+            </p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -92,6 +111,7 @@ export function Countdown({ targetDate, location, cancelled }: CountdownProps) {
   return (
     <Card className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
       <CardContent className="py-6">
+        <EventHeader />
         <div className="flex justify-center gap-4 md:gap-8">
           <TimeUnit value={days} label="días" />
           <TimeUnit value={hours} label="hrs" />
@@ -101,12 +121,6 @@ export function Countdown({ targetDate, location, cancelled }: CountdownProps) {
         <p className="text-center text-sm text-zinc-600 dark:text-zinc-400 mt-4 capitalize">
           {formatDateTime(targetDate)}
         </p>
-        {location && (
-          <p className="text-center text-sm text-orange-600 dark:text-orange-400 mt-2 flex items-center justify-center gap-1">
-            <MapPin className="h-4 w-4" />
-            {location}
-          </p>
-        )}
       </CardContent>
     </Card>
   )

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { Copy, Check, MessageCircle, CheckCircle2, Undo2 } from 'lucide-react'
+import { Copy, Check, MessageCircle, CheckCircle2, Undo2, UserCheck, UserX, DollarSign, Users } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { Expense, Attendee } from '@/types/database'
 
@@ -224,6 +224,22 @@ export default function SummaryPage({ params }: SummaryPageProps) {
     }
   }
 
+  // Group transfers by debtor
+  const getGroupedTransfers = () => {
+    const debtors = balances.filter(b => b.balance < 0)
+    const creditors = balances.filter(b => b.balance > 0)
+
+    return debtors.map(debtor => ({
+      debtor,
+      transfers: creditors.map(creditor => ({
+        creditor,
+        amount: Math.min(Math.abs(debtor.balance), creditor.balance),
+        isPaid: isTransferPaid(debtor.attendee.id, creditor.attendee.id),
+        transferId: `${debtor.attendee.id}-${creditor.attendee.id}`
+      }))
+    }))
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-2xl">
@@ -251,23 +267,37 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         </p>
       </div>
 
-      {/* Totales */}
+      {/* Totales - Visual Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
-          <CardContent className="py-4">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Total gastado</p>
-            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {formatCurrency(totalExpenses)}
-            </p>
+        <Card className="bg-gradient-to-br from-orange-500 to-amber-500 text-white border-0 shadow-lg">
+          <CardContent className="py-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <DollarSign className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm text-white/80">Total gastado</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="py-4">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Por persona</p>
-            <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              {formatCurrency(perPerson)}
-            </p>
+        <Card className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white border-0 shadow-lg">
+          <CardContent className="py-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm text-white/80">Por persona</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(perPerson)}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -275,7 +305,10 @@ export default function SummaryPage({ params }: SummaryPageProps) {
       {/* Balances por persona */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Balance por persona</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-green-500" />
+            Balance por persona
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {balances.length === 0 ? (
@@ -287,13 +320,19 @@ export default function SummaryPage({ params }: SummaryPageProps) {
               <div key={b.attendee.id}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 font-medium">
                       {b.attendee.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {b.attendee.name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                          {b.attendee.name}
+                        </p>
+                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Incluido
+                        </Badge>
+                      </div>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
                         Pagó: {formatCurrency(b.paid)}
                       </p>
@@ -323,16 +362,19 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
       {/* Personas excluidas */}
       {attendees.filter(a => a.exclude_from_split).length > 0 && (
-        <Card className="mb-6">
+        <Card className="mb-6 border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
           <CardHeader>
-            <CardTitle className="text-base">Excluidos de la división</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+              <UserX className="h-5 w-5" />
+              Excluidos de la división
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {attendees
                 .filter(a => a.exclude_from_split)
                 .map((a) => (
-                  <Badge key={a.id} variant="outline">
+                  <Badge key={a.id} variant="outline" className="text-zinc-500">
                     {a.name}
                   </Badge>
                 ))}
@@ -341,39 +383,49 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         </Card>
       )}
 
-      {/* Transferencias sugeridas */}
+      {/* Transferencias sugeridas - Agrupadas por deudor */}
       {balances.some(b => b.balance !== 0) && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-lg">Transferencias sugeridas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {balances
-              .filter(b => b.balance < 0)
-              .map((debtor) => {
-                const creditors = balances.filter(b => b.balance > 0)
-                return creditors.map((creditor) => {
-                  const transferId = `${debtor.attendee.id}-${creditor.attendee.id}`
-                  const isPaid = isTransferPaid(debtor.attendee.id, creditor.attendee.id)
+          <CardContent className="space-y-6">
+            {getGroupedTransfers().map(({ debtor, transfers }) => (
+              <div key={debtor.attendee.id} className="space-y-3">
+                {/* Debtor Header */}
+                <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-700">
+                  <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 font-medium text-sm">
+                    {debtor.attendee.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {debtor.attendee.name}
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      Debe: {formatCurrency(Math.abs(debtor.balance))}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Transfers for this debtor */}
+                {transfers.map(({ creditor, amount, isPaid, transferId }) => {
                   const isSaving = savingPayment === transferId
-                  const transferAmount = Math.min(Math.abs(debtor.balance), creditor.balance)
 
                   return (
                     <div
                       key={transferId}
-                      className={`p-4 rounded-lg border ${isPaid
-                          ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                      className={`p-4 rounded-lg border ml-4 ${isPaid
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
                         }`}
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{debtor.attendee.name}</span>
                           <span className="text-zinc-500">→</span>
                           <span className="font-medium">{creditor.attendee.name}</span>
                         </div>
                         <Badge className={isPaid ? 'bg-green-500' : 'bg-blue-500'}>
-                          {formatCurrency(transferAmount)}
+                          {formatCurrency(amount)}
                         </Badge>
                       </div>
 
@@ -381,7 +433,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                       {creditor.bankInfo && (
                         <div className="mb-3 p-3 bg-white dark:bg-zinc-800 rounded-lg space-y-2">
                           <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            Datos bancarios de {creditor.attendee.name}:
+                            Datos bancarios:
                           </p>
                           <div className="grid gap-2 text-sm">
                             <div className="flex items-center justify-between">
@@ -470,7 +522,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                               variant="outline"
                               size="sm"
                               className="flex-1"
-                              onClick={() => sendWhatsApp(creditor.attendee.name, transferAmount, creditor.bankInfo)}
+                              onClick={() => sendWhatsApp(creditor.attendee.name, amount, creditor.bankInfo)}
                             >
                               <MessageCircle className="h-4 w-4 mr-2" />
                               WhatsApp
@@ -478,7 +530,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                             <Button
                               size="sm"
                               className="flex-1 bg-green-600 hover:bg-green-700"
-                              onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, transferAmount)}
+                              onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, amount)}
                               disabled={isSaving}
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -513,8 +565,9 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                       )}
                     </div>
                   )
-                })
-              })}
+                })}
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { Pencil, Trash2, UserMinus, UserPlus, CreditCard } from 'lucide-react'
+import { Pencil, Trash2, UserMinus, UserPlus, CreditCard, Plus, X, Check } from 'lucide-react'
 import type { Attendee } from '@/types/database'
 
 interface AttendeePageProps {
@@ -32,7 +32,7 @@ interface BankInfo {
 export default function AttendeesPage({ params }: AttendeePageProps) {
   const { eventId } = use(params)
   const [attendees, setAttendees] = useState<Attendee[]>([])
-  const [newName, setNewName] = useState('')
+  const [newNames, setNewNames] = useState<string[]>([''])
   const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [eventUuid, setEventUuid] = useState<string | null>(null)
@@ -78,11 +78,28 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
     fetchData()
   }, [eventId])
 
-  const handleAddAttendee = async (e: React.FormEvent) => {
+  const handleAddMoreFields = () => {
+    setNewNames([...newNames, ''])
+  }
+
+  const handleRemoveField = (index: number) => {
+    if (newNames.length > 1) {
+      setNewNames(newNames.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleNameChange = (index: number, value: string) => {
+    const updated = [...newNames]
+    updated[index] = value
+    setNewNames(updated)
+  }
+
+  const handleAddAttendees = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!newName.trim()) {
-      toast.error('Por favor ingresa un nombre')
+    const validNames = newNames.filter(name => name.trim())
+    if (validNames.length === 0) {
+      toast.error('Por favor ingresa al menos un nombre')
       return
     }
 
@@ -94,26 +111,32 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
     setIsAdding(true)
 
     try {
-      const res = await fetch('/api/attendees', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventId: eventUuid,
-          name: newName.trim(),
-        }),
-      })
+      const addedAttendees: Attendee[] = []
 
-      const data = await res.json()
+      for (const name of validNames) {
+        const res = await fetch('/api/attendees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId: eventUuid,
+            name: name.trim(),
+          }),
+        })
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al agregar asistente')
+        const data = await res.json()
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Error al agregar asistente')
+        }
+
+        addedAttendees.push(data)
       }
 
-      setAttendees([...attendees, data])
-      setNewName('')
-      toast.success('Asistente agregado')
+      setAttendees([...attendees, ...addedAttendees])
+      setNewNames([''])
+      toast.success(`${validNames.length} asistente${validNames.length > 1 ? 's' : ''} agregado${validNames.length > 1 ? 's' : ''}`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al agregar asistente')
+      toast.error(error instanceof Error ? error.message : 'Error al agregar asistentes')
     } finally {
       setIsAdding(false)
     }
@@ -265,22 +288,54 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
         </p>
       </div>
 
-      {/* Formulario agregar */}
-      <form onSubmit={handleAddAttendee} className="flex gap-2 mb-6">
-        <Input
-          placeholder="Nombre del asistente"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          disabled={isAdding}
-        />
-        <Button
-          type="submit"
-          disabled={isAdding}
-          className="bg-orange-600 hover:bg-orange-700 shrink-0"
-        >
-          {isAdding ? 'Agregando...' : 'Agregar'}
-        </Button>
-      </form>
+      {/* Formulario agregar - Bulk */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <form onSubmit={handleAddAttendees} className="space-y-3">
+            {newNames.map((name, index) => (
+              <div key={index} className="flex gap-2">
+                <Input
+                  placeholder={`Nombre del asistente ${index + 1}`}
+                  value={name}
+                  onChange={(e) => handleNameChange(index, e.target.value)}
+                  disabled={isAdding}
+                />
+                {newNames.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveField(index)}
+                    className="shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddMoreFields}
+                disabled={isAdding}
+                className="flex-1"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar otro campo
+              </Button>
+              <Button
+                type="submit"
+                disabled={isAdding}
+                className="flex-1 bg-orange-600 hover:bg-orange-700"
+              >
+                <Check className="h-4 w-4 mr-2" />
+                {isAdding ? 'Agregando...' : `Guardar (${newNames.filter(n => n.trim()).length})`}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Lista de asistentes */}
       {isLoading ? (
@@ -303,20 +358,35 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
       ) : (
         <div className="space-y-3">
           {attendees.map((attendee) => (
-            <Card key={attendee.id}>
+            <Card
+              key={attendee.id}
+              className={attendee.exclude_from_split
+                ? 'border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 opacity-70'
+                : 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+              }
+            >
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-medium">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${attendee.exclude_from_split
+                        ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      }`}>
                       {attendee.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-zinc-100">
                         {attendee.name}
                       </p>
-                      {attendee.exclude_from_split && (
-                        <Badge variant="secondary" className="text-xs">
-                          Excluido de división
+                      {attendee.exclude_from_split ? (
+                        <Badge variant="secondary" className="text-xs bg-zinc-200 dark:bg-zinc-700">
+                          <UserMinus className="h-3 w-3 mr-1" />
+                          Excluido
+                        </Badge>
+                      ) : (
+                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          <Check className="h-3 w-3 mr-1" />
+                          Incluido en división
                         </Badge>
                       )}
                     </div>
@@ -346,6 +416,10 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                       size="icon"
                       onClick={() => handleToggleExclusion(attendee)}
                       title={attendee.exclude_from_split ? 'Incluir en división' : 'Excluir de división'}
+                      className={attendee.exclude_from_split
+                        ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                        : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'
+                      }
                     >
                       {attendee.exclude_from_split ? (
                         <UserPlus className="h-4 w-4" />
