@@ -524,7 +524,8 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                                 }}
                               >
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                Ver datos bancarios
+                                <span className="md:hidden">Ver datos bancarios</span>
+                                <span className="hidden md:inline">Ver datos</span>
                               </Button>
                             )}
                             <Button

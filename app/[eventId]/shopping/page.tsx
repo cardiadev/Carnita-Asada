@@ -272,8 +272,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
-      {/* Header: Stack on mobile */}
-      <div className="flex flex-col gap-4 mb-6">
+      {/* Header: Stack on mobile, horizontal on desktop */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-0 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
             Lista de Compras
@@ -478,11 +478,120 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                 </CardHeader>
                 <CardContent className="p-4 space-y-2">
                   {categoryItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`py-3 px-4 -mx-4 border-b last:border-0 dark:border-zinc-700 transition-colors ${item.is_purchased ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
-                    >
-                      {/* Mobile: Stack layout */}
+                    <div key={item.id}>
+                      {/* ===== MOBILE LAYOUT ===== */}
+                      <div className={`py-3 px-4 -mx-4 border-b last:border-0 dark:border-zinc-700 transition-colors md:hidden ${item.is_purchased ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
+                        <div className="flex flex-col gap-2">
+                          {/* Row 1: Checkbox + Name */}
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleTogglePurchased(item)}
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${item.is_purchased
+                                ? 'bg-green-500 border-green-500 text-white'
+                                : 'border-zinc-300 dark:border-zinc-600'
+                                }`}
+                            >
+                              {item.is_purchased && (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              )}
+                            </button>
+                            <span className={`flex-1 ${item.is_purchased ? 'line-through text-zinc-400' : ''}`}>
+                              {item.name}
+                            </span>
+                          </div>
+                          {/* Row 2: Quantity */}
+                          <div className="pl-9">
+                            <Badge variant="secondary" className="text-xs">
+                              {item.quantity} {item.unit}
+                            </Badge>
+                          </div>
+                          {/* Row 3: Actions */}
+                          <div className="flex items-center justify-between gap-2 -mx-2 px-2">
+                            <Button
+                              variant="ghost"
+                              onClick={() => handleEditClick(item)}
+                              title="Editar"
+                              className="flex-1 h-10 gap-2"
+                            >
+                              <Pencil className="h-4 w-4" />
+                              <span className="text-sm">Editar</span>
+                            </Button>
+                            <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+                            <Button
+                              variant="ghost"
+                              onClick={() => handleDelete(item.id)}
+                              className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="text-sm">Borrar</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      {/* ===== DESKTOP LAYOUT ===== */}
+                      <div className="hidden md:flex items-center justify-between py-2 border-b last:border-0 dark:border-zinc-700">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleTogglePurchased(item)}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
+                              ? 'bg-green-500 border-green-500 text-white'
+                              : 'border-zinc-300 dark:border-zinc-600'
+                              }`}
+                          >
+                            {item.is_purchased && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                          </button>
+                          <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
+                            {item.name}
+                          </span>
+                          <Badge variant="secondary" className="text-sm">
+                            {item.quantity} {item.unit}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditClick(item)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(item.id)}
+                            className="text-red-500 hover:text-red-600"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )
+          })}
+
+          {/* Items sin categoría */}
+          {itemsByCategory['sin-categoria']?.length > 0 && (
+            <Card className="overflow-hidden">
+              <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
+                <CardTitle className="text-lg">Otros</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-2">
+                {itemsByCategory['sin-categoria'].map((item) => (
+                  <div key={item.id}>
+                    {/* ===== MOBILE LAYOUT ===== */}
+                    <div className={`py-3 px-4 -mx-4 border-b last:border-0 dark:border-zinc-700 transition-colors md:hidden ${item.is_purchased ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
                       <div className="flex flex-col gap-2">
                         {/* Row 1: Checkbox + Name */}
                         <div className="flex items-center gap-3">
@@ -493,11 +602,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                               : 'border-zinc-300 dark:border-zinc-600'
                               }`}
                           >
-                            {item.is_purchased && (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            )}
+                            {item.is_purchased && <Check className="h-3.5 w-3.5" />}
                           </button>
                           <span className={`flex-1 ${item.is_purchased ? 'line-through text-zinc-400' : ''}`}>
                             {item.name}
@@ -509,7 +614,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                             {item.quantity} {item.unit}
                           </Badge>
                         </div>
-                        {/* Row 3: Actions (no top border) */}
+                        {/* Row 3: Actions */}
                         <div className="flex items-center justify-between gap-2 -mx-2 px-2">
                           <Button
                             variant="ghost"
@@ -533,67 +638,42 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )
-          })}
-
-          {/* Items sin categoría */}
-          {itemsByCategory['sin-categoria']?.length > 0 && (
-            <Card className="overflow-hidden">
-              <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
-                <CardTitle className="text-lg">Otros</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-2">
-                {itemsByCategory['sin-categoria'].map((item) => (
-                  <div
-                    key={item.id}
-                    className={`py-3 px-4 -mx-4 border-b last:border-0 dark:border-zinc-700 transition-colors ${item.is_purchased ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
-                  >
-                    {/* Mobile: Stack layout */}
-                    <div className="flex flex-col gap-2">
-                      {/* Row 1: Checkbox + Name */}
+                    {/* ===== DESKTOP LAYOUT ===== */}
+                    <div className="hidden md:flex items-center justify-between py-2 border-b last:border-0 dark:border-zinc-700">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleTogglePurchased(item)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${item.is_purchased
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
                             ? 'bg-green-500 border-green-500 text-white'
                             : 'border-zinc-300 dark:border-zinc-600'
                             }`}
                         >
                           {item.is_purchased && <Check className="h-3.5 w-3.5" />}
                         </button>
-                        <span className={`flex-1 ${item.is_purchased ? 'line-through text-zinc-400' : ''}`}>
+                        <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
                           {item.name}
                         </span>
-                      </div>
-                      {/* Row 2: Quantity */}
-                      <div className="pl-9">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-sm">
                           {item.quantity} {item.unit}
                         </Badge>
                       </div>
-                      {/* Row 3: Actions (no top border) */}
-                      <div className="flex items-center justify-between gap-2 -mx-2 px-2">
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
+                          size="icon"
                           onClick={() => handleEditClick(item)}
                           title="Editar"
-                          className="flex-1 h-10 gap-2"
                         >
                           <Pencil className="h-4 w-4" />
-                          <span className="text-sm">Editar</span>
                         </Button>
-                        <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
                         <Button
                           variant="ghost"
+                          size="icon"
                           onClick={() => handleDelete(item.id)}
-                          className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
+                          className="text-red-500 hover:text-red-600"
                           title="Eliminar"
                         >
                           <Trash2 className="h-4 w-4" />
-                          <span className="text-sm">Borrar</span>
                         </Button>
                       </div>
                     </div>
