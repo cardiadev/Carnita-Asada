@@ -16,6 +16,7 @@ import {
     Heart,
     Settings,
     Lightbulb,
+    ChefHat,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -60,6 +61,11 @@ const navItems = [
         title: "Sugerencias",
         icon: Lightbulb,
         href: "/suggestions",
+    },
+    {
+        title: "Recetas",
+        icon: ChefHat,
+        href: "/recipes",
     },
     {
         title: "Gastos",

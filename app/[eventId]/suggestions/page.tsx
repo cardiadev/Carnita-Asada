@@ -70,16 +70,20 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                         </CardHeader>
                         <CardContent className="p-8 space-y-4">
                             <div className="flex justify-between items-center p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Solo Carne Roja</span>
-                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">350g - 400g</Badge>
+                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Hombres (Sin Hueso)</span>
+                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">350g - 450g</Badge>
                             </div>
                             <div className="flex justify-between items-center p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Mixto (Pollo, Cerdo, Res)</span>
-                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">450g - 500g</Badge>
+                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Mujeres (Sin Hueso)</span>
+                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">250g - 300g</Badge>
                             </div>
                             <div className="flex justify-between items-center p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Niños</span>
-                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">150g - 200g</Badge>
+                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Niños (Sin Hueso)</span>
+                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">100g - 200g</Badge>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                                <span className="font-bold text-zinc-700 dark:text-zinc-300">Con Hueso (Promedio)</span>
+                                <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">~500g</Badge>
                             </div>
                             <p className="text-sm text-zinc-500 font-medium italic mt-4 text-center">
                                 * Las cantidades consideran el peso en crudo.
