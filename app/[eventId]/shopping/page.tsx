@@ -272,7 +272,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
-      <div className="flex items-start justify-between mb-6">
+      {/* Header: Stack on mobile */}
+      <div className="flex flex-col gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
             Lista de Compras
@@ -282,7 +283,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <TemplateSelector
             eventUuid={eventUuid}
             onItemsAdded={() => {
@@ -296,7 +297,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" className="w-full md:w-auto">
                 <Lightbulb className="h-4 w-4 mr-2" />
                 Sugerencias
               </Button>
@@ -479,47 +480,57 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                   {categoryItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between py-2 border-b last:border-0 dark:border-zinc-700"
+                      className={`py-3 px-4 -mx-4 border-b last:border-0 dark:border-zinc-700 transition-colors ${item.is_purchased ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => handleTogglePurchased(item)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
-                            ? 'bg-green-500 border-green-500 text-white'
-                            : 'border-zinc-300 dark:border-zinc-600'
-                            }`}
-                        >
-                          {item.is_purchased && (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          )}
-                        </button>
-                        <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
-                          {item.name}
-                        </span>
-                        <Badge variant="secondary" className="text-sm">
-                          {item.quantity} {item.unit}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditClick(item)}
-                          title="Editar"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-500 hover:text-red-600"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      {/* Mobile: Stack layout */}
+                      <div className="flex flex-col gap-2">
+                        {/* Row 1: Checkbox + Name */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleTogglePurchased(item)}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${item.is_purchased
+                              ? 'bg-green-500 border-green-500 text-white'
+                              : 'border-zinc-300 dark:border-zinc-600'
+                              }`}
+                          >
+                            {item.is_purchased && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                          </button>
+                          <span className={`flex-1 ${item.is_purchased ? 'line-through text-zinc-400' : ''}`}>
+                            {item.name}
+                          </span>
+                        </div>
+                        {/* Row 2: Quantity */}
+                        <div className="pl-9">
+                          <Badge variant="secondary" className="text-xs">
+                            {item.quantity} {item.unit}
+                          </Badge>
+                        </div>
+                        {/* Row 3: Actions (no top border) */}
+                        <div className="flex items-center justify-between gap-2 -mx-2 px-2">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleEditClick(item)}
+                            title="Editar"
+                            className="flex-1 h-10 gap-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="text-sm">Editar</span>
+                          </Button>
+                          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleDelete(item.id)}
+                            className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="text-sm">Borrar</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -538,43 +549,53 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                 {itemsByCategory['sin-categoria'].map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between py-2 border-b last:border-0 dark:border-zinc-700"
+                    className={`py-3 px-4 -mx-4 border-b last:border-0 dark:border-zinc-700 transition-colors ${item.is_purchased ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleTogglePurchased(item)}
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
-                          ? 'bg-green-500 border-green-500 text-white'
-                          : 'border-zinc-300 dark:border-zinc-600'
-                          }`}
-                      >
-                        {item.is_purchased && <Check className="h-3.5 w-3.5" />}
-                      </button>
-                      <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
-                        {item.name}
-                      </span>
-                      <Badge variant="secondary" className="text-sm">
-                        {item.quantity} {item.unit}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditClick(item)}
-                        title="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-500 hover:text-red-600"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    {/* Mobile: Stack layout */}
+                    <div className="flex flex-col gap-2">
+                      {/* Row 1: Checkbox + Name */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleTogglePurchased(item)}
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${item.is_purchased
+                            ? 'bg-green-500 border-green-500 text-white'
+                            : 'border-zinc-300 dark:border-zinc-600'
+                            }`}
+                        >
+                          {item.is_purchased && <Check className="h-3.5 w-3.5" />}
+                        </button>
+                        <span className={`flex-1 ${item.is_purchased ? 'line-through text-zinc-400' : ''}`}>
+                          {item.name}
+                        </span>
+                      </div>
+                      {/* Row 2: Quantity */}
+                      <div className="pl-9">
+                        <Badge variant="secondary" className="text-xs">
+                          {item.quantity} {item.unit}
+                        </Badge>
+                      </div>
+                      {/* Row 3: Actions (no top border) */}
+                      <div className="flex items-center justify-between gap-2 -mx-2 px-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleEditClick(item)}
+                          title="Editar"
+                          className="flex-1 h-10 gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="text-sm">Editar</span>
+                        </Button>
+                        <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleDelete(item.id)}
+                          className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="text-sm">Borrar</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -605,18 +626,19 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-4 gap-3">
+                <div className="flex flex-col gap-4">
                   <FormField
                     control={editForm.control}
                     name="quantity"
                     render={({ field }) => (
-                      <FormItem className="col-span-1">
+                      <FormItem>
+                        <FormLabel>Cantidad</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             disabled={isEditSaving}
                             step="0.1"
-                            placeholder="Cant."
+                            placeholder="Cantidad"
                             className="w-full"
                             {...field}
                           />
@@ -629,11 +651,12 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                     control={editForm.control}
                     name="unit"
                     render={({ field }) => (
-                      <FormItem className="col-span-1">
+                      <FormItem>
+                        <FormLabel>Unidad</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger disabled={isEditSaving} className="w-full">
-                              <SelectValue placeholder="Unidad" />
+                              <SelectValue placeholder="Seleccionar unidad" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -655,7 +678,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                     control={editForm.control}
                     name="categoryId"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
+                      <FormItem>
+                        <FormLabel>Categoría</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger disabled={isEditSaving} className="w-full">

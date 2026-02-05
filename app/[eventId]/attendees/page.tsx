@@ -313,13 +313,13 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                 )}
               </div>
             ))}
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleAddMoreFields}
                 disabled={isAdding}
-                className="flex-1"
+                className="w-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar otro campo
@@ -328,7 +328,7 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                 type="submit"
                 variant="outline"
                 disabled={isAdding}
-                className="flex-1 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
               >
                 <Check className="h-4 w-4 mr-2" />
                 {isAdding ? 'Agregando...' : `Guardar (${newNames.filter(n => n.trim()).length})`}
@@ -373,33 +373,26 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
               }
             >
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${attendee.exclude_from_split
-                      ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                      : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      }`}>
-                      {attendee.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {attendee.name}
-                      </p>
-                      {attendee.exclude_from_split ? (
-                        <Badge variant="secondary" className="text-sm bg-zinc-200 dark:bg-zinc-700">
-                          <UserMinus className="h-3 w-3 mr-1" />
-                          Excluido
-                        </Badge>
-                      ) : (
-                        <Badge className="text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          <Check className="h-3 w-3 mr-1" />
-                          Incluido en gastos
-                        </Badge>
-                      )}
-                    </div>
+                {/* Mobile: Stack layout, Desktop: Horizontal */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  {/* Row 1: Name + Badge */}
+                  <div className="flex items-center justify-between md:justify-start md:gap-3">
+                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {attendee.name}
+                    </p>
+                    {attendee.exclude_from_split ? (
+                      <Badge variant="secondary" className="text-xs bg-zinc-200 dark:bg-zinc-700 shrink-0">
+                        Excluido
+                      </Badge>
+                    ) : (
+                      <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 shrink-0">
+                        Incluido
+                      </Badge>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  {/* Row 2: Action icons */}
+                  <div className="flex items-center justify-between md:justify-end gap-1 border-t md:border-0 pt-2 md:pt-0 -mx-1 px-1 md:mx-0 md:px-0">
                     <Button
                       variant="ghost"
                       size="icon"

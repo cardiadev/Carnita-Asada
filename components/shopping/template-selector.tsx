@@ -108,7 +108,7 @@ export function TemplateSelector({ eventUuid, onItemsAdded, categories }: Templa
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" className="w-full md:w-auto">
                     <ClipboardList className="h-4 w-4 mr-2" />
                     Usar plantilla
                 </Button>

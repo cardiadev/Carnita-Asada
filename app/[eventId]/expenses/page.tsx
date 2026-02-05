@@ -207,7 +207,8 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
-      <div className="flex items-start justify-between mb-6">
+      {/* Header: Stack on mobile */}
+      <div className="flex flex-col gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
             Gastos
@@ -219,8 +220,8 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all">
-              + Agregar
+            <Button variant="outline" className="w-full md:w-auto bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all">
+              + Agregar gasto
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -334,55 +335,63 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
           {expenses.map((expense) => (
             <Card key={expense.id} className="overflow-hidden">
               <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {expense.description}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                      {expense.attendee && (
-                        <span className="flex items-center gap-1">
-                          <User className="h-3.5 w-3.5" />
-                          {expense.attendee.name}
-                        </span>
-                      )}
-                      <span>·</span>
-                      <span>{formatShortDate(expense.created_at)}</span>
-                    </div>
-                    {expense.receipt_url && (
-                      <div className="mt-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setSelectedReceipt(expense.receipt_url!)}
-                          className="h-8 text-sm gap-1.5"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          Ver comprobante
-                        </Button>
+                {/* Mobile: Stack layout, Desktop: Horizontal */}
+                <div className="flex flex-col gap-3">
+                  {/* Row 1: Description + Amount */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                        {expense.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        {expense.attendee && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-3.5 w-3.5" />
+                            {expense.attendee.name}
+                          </span>
+                        )}
+                        <span>·</span>
+                        <span>{formatShortDate(expense.created_at)}</span>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                    </div>
+                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 shrink-0">
                       {formatCurrency(Number(expense.amount))}
                     </p>
+                  </div>
+
+                  {/* Row 2: Receipt button (full width on mobile) */}
+                  {expense.receipt_url && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSelectedReceipt(expense.receipt_url!)}
+                      className="w-full md:w-auto h-9 text-sm gap-1.5"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Ver comprobante
+                    </Button>
+                  )}
+
+                  {/* Row 3: Action buttons (distributed) */}
+                  <div className="flex items-center justify-between gap-2 -mx-2 px-2">
                     <Button
                       variant="ghost"
-                      size="icon"
                       onClick={() => handleEditClick(expense)}
                       title="Editar"
+                      className="flex-1 h-10 gap-2"
                     >
                       <Pencil className="h-4 w-4" />
+                      <span className="text-sm">Editar</span>
                     </Button>
+                    <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
                     <Button
                       variant="ghost"
-                      size="icon"
                       onClick={() => handleDelete(expense.id)}
-                      className="text-red-500 hover:text-red-600"
+                      className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
                       title="Eliminar"
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="text-sm">Borrar</span>
                     </Button>
                   </div>
                 </div>

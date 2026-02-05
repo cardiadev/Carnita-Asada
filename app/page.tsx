@@ -123,7 +123,8 @@ export default function Home() {
 
               <Button
                 type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-lg font-bold shadow-lg transition-all active:scale-[0.98]"
+                variant="outline"
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 py-6 text-lg font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 shadow-lg transition-all active:scale-[0.98]"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando...' : 'Crear Carnita Asada'}

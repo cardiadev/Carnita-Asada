@@ -496,14 +496,14 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                         </Badge>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex gap-2">
+                      {/* Actions - Stack on mobile */}
+                      <div className="flex flex-col md:flex-row gap-2">
                         {!isPaid && (
                           <>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="flex-1"
+                              className="w-full md:flex-1"
                               onClick={() => sendWhatsApp(creditor.attendee.name, amount, creditor.bankInfo)}
                             >
                               <MessageCircle className="h-4 w-4 mr-2" />
@@ -513,7 +513,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="flex-1"
+                                className="w-full md:flex-1"
                                 onClick={() => {
                                   setSelectedBankInfo({
                                     name: creditor.attendee.name,
@@ -523,13 +523,13 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                                 }}
                               >
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                Ver datos
+                                Ver datos bancarios
                               </Button>
                             )}
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 font-bold text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-all"
+                              className="w-full md:flex-1 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 font-bold text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-all"
                               onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, amount)}
                               disabled={isSaving}
                             >
