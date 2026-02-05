@@ -3,12 +3,15 @@
 import { useState, useEffect, use } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
+import { Pencil, Trash2, Check } from 'lucide-react'
 import { TemplateSelector } from '@/components/shopping/template-selector'
 import type { ShoppingItem, Category, SuggestedItem } from '@/types/database'
 
@@ -37,6 +40,13 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
   const [newItemUnit, setNewItemUnit] = useState('piezas')
   const [newItemCategory, setNewItemCategory] = useState<string>('')
   const [isAdding, setIsAdding] = useState(false)
+
+  // Edit state
+  const [editingItem, setEditingItem] = useState<ShoppingItemWithCategory | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editQuantity, setEditQuantity] = useState('')
+  const [editUnit, setEditUnit] = useState('')
+  const [isEditSaving, setIsEditSaving] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -166,6 +176,44 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
       toast.success('Item eliminado')
     } catch {
       toast.error('Error al eliminar')
+    }
+  }
+
+  const handleEditClick = (item: ShoppingItemWithCategory) => {
+    setEditingItem(item)
+    setEditName(item.name)
+    setEditQuantity(String(item.quantity))
+    setEditUnit(item.unit)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingItem || !editName.trim()) return
+
+    setIsEditSaving(true)
+    try {
+      const res = await fetch(`/api/shopping/${editingItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName.trim(),
+          quantity: parseFloat(editQuantity) || 1,
+          unit: editUnit,
+        }),
+      })
+
+      if (!res.ok) throw new Error()
+
+      setItems(items.map(i =>
+        i.id === editingItem.id
+          ? { ...i, name: editName.trim(), quantity: parseFloat(editQuantity) || 1, unit: editUnit }
+          : i
+      ))
+      setEditingItem(null)
+      toast.success('Item actualizado')
+    } catch {
+      toast.error('Error al actualizar')
+    } finally {
+      setIsEditSaving(false)
     }
   }
 
@@ -345,8 +393,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                         <button
                           onClick={() => handleTogglePurchased(item)}
                           className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
-                              ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-zinc-300 dark:border-zinc-600'
+                            ? 'bg-green-500 border-green-500 text-white'
+                            : 'border-zinc-300 dark:border-zinc-600'
                             }`}
                         >
                           {item.is_purchased && (
@@ -362,18 +410,25 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                           {item.quantity} {item.unit}
                         </Badge>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(item)}
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-500 hover:text-red-600"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </CardContent>
@@ -397,15 +452,11 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                       <button
                         onClick={() => handleTogglePurchased(item)}
                         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${item.is_purchased
-                            ? 'bg-green-500 border-green-500 text-white'
-                            : 'border-zinc-300 dark:border-zinc-600'
+                          ? 'bg-green-500 border-green-500 text-white'
+                          : 'border-zinc-300 dark:border-zinc-600'
                           }`}
                       >
-                        {item.is_purchased && (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
+                        {item.is_purchased && <Check className="h-3.5 w-3.5" />}
                       </button>
                       <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
                         {item.name}
@@ -414,18 +465,25 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                         {item.quantity} {item.unit}
                       </Badge>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                      </svg>
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditClick(item)}
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(item.id)}
+                        className="text-red-500 hover:text-red-600"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -433,6 +491,64 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
           )}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editName">Nombre</Label>
+              <Input
+                id="editName"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                disabled={isEditSaving}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editQuantity">Cantidad</Label>
+                <Input
+                  id="editQuantity"
+                  type="number"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
+                  disabled={isEditSaving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editUnit">Unidad</Label>
+                <Select value={editUnit} onValueChange={setEditUnit} disabled={isEditSaving}>
+                  <SelectTrigger id="editUnit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="piezas">piezas</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="g">g</SelectItem>
+                    <SelectItem value="litros">litros</SelectItem>
+                    <SelectItem value="paquetes">paquetes</SelectItem>
+                    <SelectItem value="bolsas">bolsas</SelectItem>
+                    <SelectItem value="manojos">manojos</SelectItem>
+                    <SelectItem value="six">six</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingItem(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isEditSaving} className="bg-orange-600 hover:bg-orange-700">
+              {isEditSaving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

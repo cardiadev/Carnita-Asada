@@ -22,10 +22,10 @@ export async function POST(request: Request) {
     }
 
     // Validar tipo de archivo
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Tipo de archivo no permitido. Usa JPG, PNG, o WebP' },
+        { error: 'Tipo de archivo no permitido. Usa JPG, PNG, WebP o PDF' },
         { status: 400 }
       )
     }
@@ -55,13 +55,25 @@ export async function POST(request: Request) {
       .from('receipts')
       .upload(fileName, buffer, {
         contentType: file.type,
-        upsert: false,
+        upsert: true, // Changed to true to allow overwrites
       })
 
     if (error) {
       console.error('Error uploading file:', error)
+
+      // Check for RLS policy error
+      if (error.message?.includes('row-level security') || error.statusCode === '403') {
+        return NextResponse.json(
+          {
+            error: 'Error de permisos en Supabase Storage. Ve a Supabase Dashboard > Storage > receipts > Policies y agrega una política INSERT para permitir uploads.',
+            details: error.message
+          },
+          { status: 500 }
+        )
+      }
+
       return NextResponse.json(
-        { error: 'Error al subir archivo' },
+        { error: 'Error al subir archivo: ' + error.message },
         { status: 500 }
       )
     }
@@ -75,7 +87,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error in POST /api/upload:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     )
   }

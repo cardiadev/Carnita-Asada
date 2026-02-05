@@ -11,12 +11,15 @@ import {
     Receipt,
     PieChart,
     BarChart3,
+    Share2,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import {
     Sidebar,
     SidebarContent,
     SidebarHeader,
+    SidebarFooter,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
@@ -24,6 +27,7 @@ import {
     SidebarGroupLabel,
     SidebarGroupContent,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 
 interface EventSidebarProps extends React.ComponentProps<typeof Sidebar> {
     eventId: string
@@ -52,7 +56,7 @@ const navItems = [
         href: "/expenses",
     },
     {
-        title: "Resumen",
+        title: "Pagos",
         icon: PieChart,
         href: "/summary",
     },
@@ -65,6 +69,32 @@ const navItems = [
 
 export function EventSidebar({ eventId, eventTitle, ...props }: EventSidebarProps) {
     const pathname = usePathname()
+
+    const handleShare = async () => {
+        const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
+        const eventUrl = `${appUrl}/${eventId}`
+        const shareText = `🔥 ¡Únete a ${eventTitle || 'nuestra carnita asada'}!\n\n${eventUrl}`
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: eventTitle || 'Carnita Asada',
+                    text: shareText,
+                    url: eventUrl,
+                })
+                return
+            } catch {
+                // fallback to clipboard
+            }
+        }
+
+        try {
+            await navigator.clipboard.writeText(eventUrl)
+            toast.success('¡Link copiado al portapapeles!')
+        } catch {
+            toast.error('No se pudo copiar el link')
+        }
+    }
 
     return (
         <Sidebar variant="inset" {...props}>
@@ -113,6 +143,20 @@ export function EventSidebar({ eventId, eventTitle, ...props }: EventSidebarProp
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-start gap-2"
+                            onClick={handleShare}
+                        >
+                            <Share2 className="h-4 w-4" />
+                            Compartir evento
+                        </Button>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
         </Sidebar>
     )
 }

@@ -7,8 +7,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+import { CurrencyInput } from '@/components/ui/currency-input'
+import { ReceiptModal } from '@/components/receipt-modal'
 import { toast } from 'sonner'
+import { Pencil, Trash2, User, FileText } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatShortDate } from '@/lib/utils/date'
 import type { Expense, Attendee } from '@/types/database'
@@ -36,6 +39,16 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Edit state
+  const [editingExpense, setEditingExpense] = useState<ExpenseWithAttendee | null>(null)
+  const [editDescription, setEditDescription] = useState('')
+  const [editAmount, setEditAmount] = useState('')
+  const [editAttendeeId, setEditAttendeeId] = useState('')
+  const [isEditSaving, setIsEditSaving] = useState(false)
+
+  // Receipt modal state
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -153,6 +166,43 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
     }
   }
 
+  const handleEditClick = (expense: ExpenseWithAttendee) => {
+    setEditingExpense(expense)
+    setEditDescription(expense.description)
+    setEditAmount(String(expense.amount))
+    setEditAttendeeId(expense.attendee_id || '')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingExpense || !editDescription.trim() || !editAmount) return
+
+    setIsEditSaving(true)
+    try {
+      const res = await fetch(`/api/expenses/${editingExpense.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: editDescription.trim(),
+          amount: parseFloat(editAmount),
+          attendeeId: editAttendeeId || null,
+        }),
+      })
+
+      if (!res.ok) throw new Error()
+
+      const updatedExpense = await res.json()
+      setExpenses(expenses.map(e =>
+        e.id === editingExpense.id ? updatedExpense : e
+      ))
+      setEditingExpense(null)
+      toast.success('Gasto actualizado')
+    } catch {
+      toast.error('Error al actualizar')
+    } finally {
+      setIsEditSaving(false)
+    }
+  }
+
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
 
   return (
@@ -191,15 +241,13 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="amount">Monto</Label>
-                <Input
+                <CurrencyInput
                   id="amount"
-                  type="number"
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   disabled={isSubmitting}
                   min="0.01"
-                  step="0.01"
                 />
               </div>
 
@@ -287,10 +335,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                     <div className="flex items-center gap-2 mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                       {expense.attendee && (
                         <span className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                          </svg>
+                          <User className="h-3.5 w-3.5" />
                           {expense.attendee.name}
                         </span>
                       )}
@@ -298,14 +343,13 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                       <span>{formatShortDate(expense.created_at)}</span>
                     </div>
                     {expense.receipt_url && (
-                      <a
-                        href={expense.receipt_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-orange-600 hover:underline mt-1 inline-block"
+                      <button
+                        onClick={() => setSelectedReceipt(expense.receipt_url!)}
+                        className="text-sm text-orange-600 hover:underline mt-1 inline-flex items-center gap-1"
                       >
+                        <FileText className="h-3.5 w-3.5" />
                         Ver comprobante
-                      </a>
+                      </button>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -314,15 +358,20 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                     </p>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      onClick={() => handleEditClick(expense)}
+                      title="Editar"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleDelete(expense.id)}
                       className="text-red-500 hover:text-red-600"
+                      title="Eliminar"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                      </svg>
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -331,6 +380,66 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
           ))}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingExpense} onOpenChange={() => setEditingExpense(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar gasto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editDescription">Descripción</Label>
+              <Textarea
+                id="editDescription"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                disabled={isEditSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editAmount">Monto</Label>
+              <CurrencyInput
+                id="editAmount"
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+                disabled={isEditSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editAttendee">¿Quién pagó?</Label>
+              <Select value={editAttendeeId} onValueChange={setEditAttendeeId} disabled={isEditSaving}>
+                <SelectTrigger id="editAttendee">
+                  <SelectValue placeholder="Seleccionar persona" />
+                </SelectTrigger>
+                <SelectContent>
+                  {attendees.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingExpense(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isEditSaving} className="bg-orange-600 hover:bg-orange-700">
+              {isEditSaving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt Modal */}
+      <ReceiptModal
+        isOpen={!!selectedReceipt}
+        onClose={() => setSelectedReceipt(null)}
+        receiptUrl={selectedReceipt || ''}
+      />
     </div>
   )
 }
+

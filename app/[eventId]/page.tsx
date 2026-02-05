@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Countdown } from '@/components/event/countdown'
-import { ShareButton } from '@/components/event/share-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils/currency'
 
 interface EventPageProps {
@@ -18,6 +19,13 @@ interface EventWithAttendees {
   created_at: string
   updated_at: string
   attendees: Array<{ id: string; name: string; exclude_from_split: boolean }>
+}
+
+interface PersonBalance {
+  name: string
+  attendeeId: string
+  paid: number
+  balance: number
 }
 
 export default async function EventPage({ params }: EventPageProps) {
@@ -40,34 +48,46 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const event = eventData as unknown as EventWithAttendees
 
-  // Obtener total de gastos
+  // Obtener gastos con asistente
   const { data: expensesData } = await supabase
     .from('expenses')
-    .select('amount')
+    .select('amount, attendee_id')
     .eq('event_id', event.id)
 
-  const expenses = expensesData as Array<{ amount: number }> | null
+  const expenses = expensesData as Array<{ amount: number; attendee_id: string | null }> | null
   const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0
   const attendeesCount = event.attendees?.length || 0
-  const activeAttendees = event.attendees?.filter((a) => !a.exclude_from_split).length || 0
-  const perPerson = activeAttendees > 0 ? totalExpenses / activeAttendees : 0
+  const activeAttendees = event.attendees?.filter((a) => !a.exclude_from_split) || []
+  const activeCount = activeAttendees.length
+  const perPerson = activeCount > 0 ? totalExpenses / activeCount : 0
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const eventUrl = `${appUrl}/${eventId}`
+  // Calcular quién falta por pagar
+  const balances: PersonBalance[] = activeAttendees.map(attendee => {
+    const paid = expenses
+      ?.filter(e => e.attendee_id === attendee.id)
+      .reduce((sum, e) => sum + Number(e.amount), 0) || 0
+
+    return {
+      name: attendee.name,
+      attendeeId: attendee.id,
+      paid,
+      balance: paid - perPerson
+    }
+  })
+
+  const pendingPayments = balances.filter(b => b.balance < 0)
+  const completedPayments = balances.filter(b => b.balance >= 0)
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-            {event.title}
-          </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            {attendeesCount} {attendeesCount === 1 ? 'asistente' : 'asistentes'}
-          </p>
-        </div>
-        <ShareButton eventUrl={eventUrl} eventTitle={event.title} />
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+          {event.title}
+        </h1>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          {attendeesCount} {attendeesCount === 1 ? 'asistente' : 'asistentes'}
+        </p>
       </div>
 
       {/* Countdown */}
@@ -100,106 +120,112 @@ export default async function EventPage({ params }: EventPageProps) {
             <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               {formatCurrency(perPerson)}
             </p>
-            {activeAttendees !== attendeesCount && (
+            {activeCount !== attendeesCount && (
               <p className="text-xs text-zinc-500 mt-1">
-                Entre {activeAttendees} personas
+                Entre {activeCount} personas
               </p>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-          Acciones rápidas
-        </h2>
+      {/* Payment Progress */}
+      {balances.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center justify-between">
+              Estado de pagos
+              <Badge variant="outline">
+                {completedPayments.length}/{balances.length} al día
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 rounded-full transition-all duration-500"
+                style={{ width: `${(completedPayments.length / balances.length) * 100}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <div className="grid gap-3">
-          <QuickActionCard
-            href={`/${eventId}/attendees`}
-            title="Agregar asistentes"
-            description="Añade a las personas que irán a la carnita"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <line x1="19" x2="19" y1="8" y2="14"/>
-                <line x1="22" x2="16" y1="11" y2="11"/>
-              </svg>
-            }
-          />
+      {/* Pending Payments */}
+      {pendingPayments.length > 0 && (
+        <Card className="mb-6 border-red-200 dark:border-red-800">
+          <CardHeader>
+            <CardTitle className="text-lg text-red-700 dark:text-red-400">
+              ¿Quién falta por pagar?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {pendingPayments.map((person) => (
+              <div
+                key={person.attendeeId}
+                className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-red-600 dark:text-red-400 font-medium">
+                    {person.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {person.name}
+                  </span>
+                </div>
+                <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                  Debe {formatCurrency(Math.abs(person.balance))}
+                </Badge>
+              </div>
+            ))}
+            <Link
+              href={`/${eventId}/summary`}
+              className="block text-center text-sm text-orange-600 hover:underline mt-2"
+            >
+              Ver pagos y transferencias →
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
-          <QuickActionCard
-            href={`/${eventId}/shopping`}
-            title="Lista de compras"
-            description="Organiza qué necesitas comprar para el evento"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                <path d="M3 6h18"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-              </svg>
-            }
-          />
+      {/* All Caught Up */}
+      {pendingPayments.length === 0 && balances.length > 0 && (
+        <Card className="mb-6 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+          <CardContent className="py-6 text-center">
+            <div className="text-4xl mb-2">🎉</div>
+            <h3 className="font-bold text-green-700 dark:text-green-400">
+              ¡Todos al día!
+            </h3>
+            <p className="text-sm text-green-600 dark:text-green-500">
+              No hay pagos pendientes
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
-          <QuickActionCard
-            href={`/${eventId}/expenses`}
-            title="Registrar gastos"
-            description="Añade los gastos y sube los comprobantes"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="20" height="14" x="2" y="5" rx="2"/>
-                <line x1="2" x2="22" y1="10" y2="10"/>
-              </svg>
-            }
-          />
-
-          <QuickActionCard
-            href={`/${eventId}/summary`}
-            title="Ver resumen"
-            description="Revisa la división de gastos entre todos"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 3v18h18"/>
-                <path d="m19 9-5 5-4-4-3 3"/>
-              </svg>
-            }
-          />
-        </div>
-      </div>
+      {/* Empty State */}
+      {balances.length === 0 && (
+        <Card className="mb-6">
+          <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+            <p>Agrega asistentes y registra gastos para ver el estado de pagos</p>
+            <div className="flex justify-center gap-4 mt-4">
+              <Link
+                href={`/${eventId}/attendees`}
+                className="text-orange-600 hover:underline"
+              >
+                Agregar asistentes
+              </Link>
+              <Link
+                href={`/${eventId}/expenses`}
+                className="text-orange-600 hover:underline"
+              >
+                Registrar gastos
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
 
-function QuickActionCard({
-  href,
-  title,
-  description,
-  icon,
-}: {
-  href: string
-  title: string
-  description: string
-  icon: React.ReactNode
-}) {
-  return (
-    <a href={href}>
-      <Card className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
-        <CardContent className="flex items-center gap-4 py-4">
-          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
-              {title}
-            </h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              {description}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </a>
-  )
-}
