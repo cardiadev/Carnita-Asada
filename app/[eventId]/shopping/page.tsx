@@ -27,41 +27,70 @@ type CategoryWithSuggestions = Category & {
   suggested_items: SuggestedItem[]
 }
 
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+
+const formSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido'),
+  quantity: z.string().min(1, 'La cantidad es requerida'),
+  unit: z.string().min(1, 'La unidad es requerida'),
+  categoryId: z.string().optional(),
+})
+
+type FormValues = z.infer<typeof formSchema>
+
 export default function ShoppingPage({ params }: ShoppingPageProps) {
   const { eventId } = use(params)
   const [items, setItems] = useState<ShoppingItemWithCategory[]>([])
   const [categories, setCategories] = useState<CategoryWithSuggestions[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [eventUuid, setEventUuid] = useState<string | null>(null)
-
-  // Form state
-  const [newItemName, setNewItemName] = useState('')
-  const [newItemQuantity, setNewItemQuantity] = useState('1')
-  const [newItemUnit, setNewItemUnit] = useState('piezas')
-  const [newItemCategory, setNewItemCategory] = useState<string>('')
   const [isAdding, setIsAdding] = useState(false)
-
-  // Edit state
   const [editingItem, setEditingItem] = useState<ShoppingItemWithCategory | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editQuantity, setEditQuantity] = useState('')
-  const [editUnit, setEditUnit] = useState('')
   const [isEditSaving, setIsEditSaving] = useState(false)
+
+  // Add Item Form
+  const addForm = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      quantity: '1',
+      unit: 'piezas',
+      categoryId: '',
+    },
+  })
+
+  // Edit Item Form
+  const editForm = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      quantity: '1',
+      unit: 'piezas',
+      categoryId: '',
+    },
+  })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Obtener evento
         const eventRes = await fetch(`/api/events/${eventId}`)
         const eventData = await eventRes.json()
         if (eventRes.ok) setEventUuid(eventData.id)
 
-        // Obtener categorías
         const catRes = await fetch('/api/categories')
         const catData = await catRes.json()
         if (catRes.ok) setCategories(catData)
 
-        // Obtener items
         const itemsRes = await fetch(`/api/shopping?eventId=${eventId}`)
         const itemsData = await itemsRes.json()
         if (itemsRes.ok) setItems(itemsData)
@@ -76,14 +105,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
     fetchData()
   }, [eventId])
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!newItemName.trim()) {
-      toast.error('Por favor ingresa un nombre')
-      return
-    }
-
+  const onAddItem = async (values: FormValues) => {
     if (!eventUuid) {
       toast.error('Error: no se pudo obtener el ID del evento')
       return
@@ -97,10 +119,10 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: eventUuid,
-          categoryId: newItemCategory || undefined,
-          name: newItemName.trim(),
-          quantity: parseFloat(newItemQuantity) || 1,
-          unit: newItemUnit,
+          categoryId: values.categoryId || undefined,
+          name: values.name.trim(),
+          quantity: parseFloat(values.quantity) || 1,
+          unit: values.unit,
         }),
       })
 
@@ -111,8 +133,12 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
       }
 
       setItems([...items, data])
-      setNewItemName('')
-      setNewItemQuantity('1')
+      addForm.reset({
+        name: '',
+        quantity: '1',
+        unit: 'piezas',
+        categoryId: '',
+      })
       toast.success('Item agregado')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al agregar item')
@@ -181,13 +207,16 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
   const handleEditClick = (item: ShoppingItemWithCategory) => {
     setEditingItem(item)
-    setEditName(item.name)
-    setEditQuantity(String(item.quantity))
-    setEditUnit(item.unit)
+    editForm.reset({
+      name: item.name,
+      quantity: String(item.quantity),
+      unit: item.unit,
+      categoryId: item.category_id || '',
+    })
   }
 
-  const handleSaveEdit = async () => {
-    if (!editingItem || !editName.trim()) return
+  const onEditItem = async (values: FormValues) => {
+    if (!editingItem) return
 
     setIsEditSaving(true)
     try {
@@ -195,9 +224,9 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: editName.trim(),
-          quantity: parseFloat(editQuantity) || 1,
-          unit: editUnit,
+          name: values.name.trim(),
+          quantity: parseFloat(values.quantity) || 1,
+          unit: values.unit,
         }),
       })
 
@@ -205,7 +234,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
       setItems(items.map(i =>
         i.id === editingItem.id
-          ? { ...i, name: editName.trim(), quantity: parseFloat(editQuantity) || 1, unit: editUnit }
+          ? { ...i, name: values.name.trim(), quantity: parseFloat(values.quantity) || 1, unit: values.unit }
           : i
       ))
       setEditingItem(null)
@@ -301,63 +330,105 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
       {/* Formulario agregar */}
       <Card className="mb-6 overflow-hidden">
         <CardContent className="p-4">
-          <form onSubmit={handleAddItem} className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Nombre del item"
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
-                disabled={isAdding}
-                className="flex-1"
+          <Form {...addForm}>
+            <form onSubmit={addForm.handleSubmit(onAddItem)} className="space-y-4">
+              <FormField
+                control={addForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="¿Qué falta? (ej. Arrachera, Carbón...)"
+                        disabled={isAdding}
+                        className="w-full"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <Input
-                type="number"
-                placeholder="Cantidad"
-                value={newItemQuantity}
-                onChange={(e) => setNewItemQuantity(e.target.value)}
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-2">
+                <FormField
+                  control={addForm.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Cant."
+                          disabled={isAdding}
+                          min="0.1"
+                          step="0.1"
+                          className="w-full"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={addForm.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="piezas">piezas</SelectItem>
+                          <SelectItem value="kg">kg</SelectItem>
+                          <SelectItem value="litros">litros</SelectItem>
+                          <SelectItem value="paquetes">paquetes</SelectItem>
+                          <SelectItem value="bolsas">bolsas</SelectItem>
+                          <SelectItem value="manojos">manojos</SelectItem>
+                          <SelectItem value="six">six</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={addForm.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem className="xs:col-span-2 sm:col-span-2">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Categoría (opcional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <Button
+                type="submit"
+                variant="outline"
                 disabled={isAdding}
-                className="w-20"
-                min="0.1"
-                step="0.1"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={newItemCategory} onValueChange={setNewItemCategory}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Categoría (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={newItemUnit} onValueChange={setNewItemUnit}>
-                <SelectTrigger className="w-28">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="piezas">piezas</SelectItem>
-                  <SelectItem value="kg">kg</SelectItem>
-                  <SelectItem value="litros">litros</SelectItem>
-                  <SelectItem value="paquetes">paquetes</SelectItem>
-                  <SelectItem value="bolsas">bolsas</SelectItem>
-                  <SelectItem value="manojos">manojos</SelectItem>
-                  <SelectItem value="six">six</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              type="submit"
-              variant="outline"
-              disabled={isAdding}
-              className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
-            >
-              {isAdding ? 'Agregando...' : 'Agregar Item'}
-            </Button>
-          </form>
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all font-bold"
+              >
+                {isAdding ? 'Agregando...' : 'Agregar Item'}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
 
@@ -502,63 +573,83 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
       {/* Edit Dialog */}
       <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar item</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="editName">Nombre</Label>
-              <Input
-                id="editName"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                disabled={isEditSaving}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="editQuantity">Cantidad</Label>
-                <Input
-                  id="editQuantity"
-                  type="number"
-                  value={editQuantity}
-                  onChange={(e) => setEditQuantity(e.target.value)}
-                  disabled={isEditSaving}
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditItem)}>
+              <DialogHeader>
+                <DialogTitle>Editar item</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <FormField
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre</FormLabel>
+                      <FormControl>
+                        <Input disabled={isEditSaving} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cantidad</FormLabel>
+                        <FormControl>
+                          <Input type="number" disabled={isEditSaving} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="unit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unidad</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger disabled={isEditSaving}>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="piezas">piezas</SelectItem>
+                            <SelectItem value="kg">kg</SelectItem>
+                            <SelectItem value="g">g</SelectItem>
+                            <SelectItem value="litros">litros</SelectItem>
+                            <SelectItem value="paquetes">paquetes</SelectItem>
+                            <SelectItem value="bolsas">bolsas</SelectItem>
+                            <SelectItem value="manojos">manojos</SelectItem>
+                            <SelectItem value="six">six</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="editUnit">Unidad</Label>
-                <Select value={editUnit} onValueChange={setEditUnit} disabled={isEditSaving}>
-                  <SelectTrigger id="editUnit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="piezas">piezas</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="g">g</SelectItem>
-                    <SelectItem value="litros">litros</SelectItem>
-                    <SelectItem value="paquetes">paquetes</SelectItem>
-                    <SelectItem value="bolsas">bolsas</SelectItem>
-                    <SelectItem value="manojos">manojos</SelectItem>
-                    <SelectItem value="six">six</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingItem(null)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleSaveEdit}
-              disabled={isEditSaving}
-              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all font-bold"
-            >
-              {isEditSaving ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setEditingItem(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={isEditSaving}
+                  className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all font-bold"
+                >
+                  {isEditSaving ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

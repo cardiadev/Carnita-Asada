@@ -173,7 +173,7 @@ export function TemplateSelector({ eventUuid, onItemsAdded, categories }: Templa
                     </div>
                 )}
 
-                <DialogFooter className="gap-2 sm:gap-0">
+                <DialogFooter className="flex flex-row justify-end gap-3 mt-4">
                     {step === 'preview' && (
                         <Button variant="outline" onClick={handleBack} disabled={isLoading}>
                             Atrás
@@ -181,9 +181,10 @@ export function TemplateSelector({ eventUuid, onItemsAdded, categories }: Templa
                     )}
                     {step === 'preview' && (
                         <Button
+                            variant="outline"
                             onClick={handleConfirm}
                             disabled={isLoading}
-                            className="bg-orange-600 hover:bg-orange-700"
+                            className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
                         >
                             {isLoading ? 'Agregando...' : 'Agregar todos'}
                         </Button>
