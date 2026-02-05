@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { toast } from 'sonner'
-import { MapPin } from 'lucide-react'
+import { MapPin, Beef, Heart } from 'lucide-react'
 
 export default function Home() {
   const router = useRouter()
@@ -61,37 +61,44 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-100 dark:from-zinc-900 dark:to-zinc-800">
       <main className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-screen">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+        <div className="text-center mb-10 flex flex-col items-center">
+          <div className="w-24 h-24 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6 shadow-orange-200 dark:shadow-orange-900/20 shadow-xl animate-bounce-slow">
+            <Beef className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+          </div>
+          <h1 className="text-6xl font-black text-orange-600 dark:text-orange-400 mb-3 tracking-tight">
             Carnita Asada
           </h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Organiza tu parrillada con amigos
+          <p className="text-xl text-zinc-600 dark:text-zinc-400 font-medium">
+            Organiza tu parrillada sin tanta complicación
           </p>
         </div>
 
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Crear nuevo evento</CardTitle>
-            <CardDescription>
+        <Card className="w-full max-w-md shadow-2xl shadow-orange-200/50 dark:shadow-zinc-950/50 border-orange-100 dark:border-zinc-800 border-2">
+          <CardHeader className="p-8 pb-6 space-y-3">
+            <CardTitle className="text-3xl font-bold tracking-tight">Crear nuevo evento</CardTitle>
+            <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
               Ingresa los datos de tu carnita asada para comenzar
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Nombre del evento</Label>
+          <CardContent className="p-8 pt-0">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="title" className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Nombre del evento
+                </Label>
                 <Input
                   id="title"
-                  placeholder="Ej: Carnita de cumpleaños de Juan"
+                  placeholder="Ej: Carnita con los Reales"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Fecha y hora</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Fecha y hora
+                </Label>
                 <DateTimePicker
                   value={eventDate}
                   onChange={setEventDate}
@@ -101,10 +108,10 @@ export default function Home() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="location" className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  Ubicación <span className="text-zinc-400 text-xs">(opcional)</span>
+              <div className="space-y-3">
+                <Label htmlFor="location" className="flex items-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  <MapPin className="h-4 w-4 text-orange-500" />
+                  Ubicación <span className="text-zinc-400 text-xs font-normal">(opcional)</span>
                 </Label>
                 <Input
                   id="location"
@@ -117,7 +124,7 @@ export default function Home() {
 
               <Button
                 type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700"
+                className="w-full bg-orange-600 hover:bg-orange-700 py-6 text-base font-bold shadow-lg shadow-orange-200 dark:shadow-none transition-all active:scale-[0.98]"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando...' : 'Crear Carnita Asada'}
@@ -126,19 +133,26 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <footer className="mt-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          <p>
-            Creado por{' '}
+        <footer className="mt-16 text-center text-sm text-zinc-500 dark:text-zinc-400 flex flex-col items-center gap-1">
+          <p className="flex items-center gap-1.5 font-medium italic">
+            Creado con amor <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse" /> por{' '}
             <a
-              href="https://github.com/cardiadev"
+              href="https://carlosdiaz.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-orange-600 hover:underline"
+              className="text-orange-600 dark:text-orange-400 hover:underline font-bold not-italic"
             >
-              @cardiadev
+              Carlos Díaz
             </a>
-            {' '}(Carlos Díaz)
           </p>
+          <a
+            href="https://github.com/cardiadev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-400 hover:text-orange-600 transition-colors"
+          >
+            @cardiadev
+          </a>
         </footer>
       </main>
     </div>

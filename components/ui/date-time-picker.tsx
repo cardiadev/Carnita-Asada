@@ -103,9 +103,16 @@ export function DateTimePicker({
                 type="datetime-local"
                 value={getNativeDateTimeValue()}
                 onChange={handleNativeDateTimeChange}
+                onClick={(e) => {
+                    try {
+                        (e.currentTarget as any).showPicker();
+                    } catch (err) {
+                        console.log("showPicker not supported");
+                    }
+                }}
                 min={getMinDateTimeValue()}
                 disabled={disabled}
-                className="w-full"
+                className="w-full cursor-pointer"
             />
         )
     }
@@ -119,7 +126,7 @@ export function DateTimePicker({
                         variant="outline"
                         disabled={disabled}
                         className={cn(
-                            "flex-1 justify-start text-left font-normal",
+                            "flex-1 justify-start text-left font-normal h-10",
                             !value && "text-muted-foreground"
                         )}
                     >
@@ -146,15 +153,22 @@ export function DateTimePicker({
                 <Label htmlFor="time" className="sr-only">
                     Hora
                 </Label>
-                <div className="relative">
-                    <Clock className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <div className="relative group">
+                    <Clock className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none group-focus-within:text-orange-500 transition-colors" />
                     <Input
                         id="time"
                         type="time"
                         value={time}
                         onChange={handleTimeChange}
+                        onClick={(e) => {
+                            try {
+                                (e.currentTarget as any).showPicker();
+                            } catch (err) {
+                                console.log("showPicker not supported");
+                            }
+                        }}
                         disabled={disabled}
-                        className="w-[120px] pl-9"
+                        className="w-[125px] pl-9 cursor-pointer [appearance:none] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:left-0"
                     />
                 </div>
             </div>

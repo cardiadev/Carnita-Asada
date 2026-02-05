@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils/currency'
-import { DollarSign, Users, MessageCircle, ArrowRight, MapPin, Megaphone, Beef, Lightbulb, ExternalLink, PieChart } from 'lucide-react'
+import { DollarSign, Users, MessageCircle, ArrowRight, MapPin, Megaphone, Beef, Lightbulb, ExternalLink, PieChart, Heart } from 'lucide-react'
 
 interface EventPageProps {
   params: Promise<{ eventId: string }>
@@ -129,32 +129,32 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Stats - More Visual (CRITICAL: PRIORITY AT TOP) */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm">
-          <CardContent className="p-4">
+        <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-xl shadow-orange-100/50 dark:shadow-none border-2">
+          <CardContent className="p-5">
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
                 <DollarSign className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                <p className="text-base font-semibold tracking-wide">Gastado</p>
+                <p className="text-base font-bold tracking-wide">Gastado</p>
               </div>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              <p className="text-3xl font-black text-zinc-900 dark:text-zinc-100 leading-none">
                 {formatCurrency(totalExpenses)}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-sm">
-          <CardContent className="p-4">
+        <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-xl shadow-blue-100/50 dark:shadow-none border-2">
+          <CardContent className="p-5">
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
                 <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <p className="text-base font-semibold tracking-wide">Por persona</p>
+                <p className="text-base font-bold tracking-wide">Por persona</p>
               </div>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              <p className="text-3xl font-black text-zinc-900 dark:text-zinc-100 leading-none">
                 {formatCurrency(perPerson)}
               </p>
               {activeCount !== attendeesCount && (
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-zinc-500 mt-1 font-medium">
                   Entre {activeCount}
                 </p>
               )}
@@ -344,6 +344,28 @@ export default async function EventPage({ params }: EventPageProps) {
           </div>
         </CardContent>
       </Card>
+      {/* Footer */}
+      <footer className="mt-12 mb-8 text-center text-sm text-zinc-500 dark:text-zinc-400 flex flex-col items-center gap-1">
+        <p className="flex items-center gap-1.5 font-medium italic">
+          Creado con amor <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse" /> por{' '}
+          <a
+            href="https://carlosdiaz.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-600 dark:text-orange-400 hover:underline font-bold not-italic"
+          >
+            Carlos Díaz
+          </a>
+        </p>
+        <a
+          href="https://github.com/cardiadev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-400 hover:text-orange-600 transition-colors"
+        >
+          @cardiadev
+        </a>
+      </footer>
     </div>
   )
 }

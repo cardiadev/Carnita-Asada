@@ -5,7 +5,7 @@ import { useCountdown } from '@/hooks/use-countdown'
 import { formatDateTime, formatDateOnly, formatTimeOnly } from '@/lib/utils/date'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Users } from 'lucide-react'
+import { MapPin, Users, Beef } from 'lucide-react'
 
 interface CountdownProps {
   targetDate: Date | string
@@ -51,7 +51,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
   // Cancelled state
   if (cancelled) {
     return (
-      <Card className="bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700">
+      <Card className="bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 shadow-xl border-2">
         <CardContent className="py-6">
           <EventHeader />
           <div className="text-center">
@@ -70,7 +70,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
   // Past event
   if (isPast) {
     return (
-      <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+      <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 shadow-xl border-2">
         <CardContent className="py-6">
           <EventHeader />
           <div className="text-center">
@@ -92,7 +92,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
   // Today / Expired (event is happening now)
   if (isExpired || isToday) {
     return (
-      <Card className="bg-orange-100 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+      <Card className="bg-orange-100 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 shadow-xl border-2 shadow-orange-100/50">
         <CardContent className="py-6">
           <EventHeader />
           <div className="text-center">
@@ -110,7 +110,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
 
   // Countdown (future event)
   return (
-    <Card className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
+    <Card className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800 shadow-2xl shadow-orange-100/50 dark:shadow-none border-2">
       <CardContent className="py-6">
         <EventHeader />
         <div className="flex justify-center gap-4 md:gap-8">
