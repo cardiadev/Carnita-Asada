@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { EventSidebar } from '@/components/event-sidebar'
 import { BottomNav } from '@/components/layout/bottom-nav'
+import { MobileMenu } from '@/components/layout/mobile-menu'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import { CancelEventDialog } from '@/components/cancel-event-dialog'
+import { Menu } from 'lucide-react'
 
 interface EventLayoutClientProps {
     children: React.ReactNode
@@ -17,6 +20,7 @@ interface EventLayoutClientProps {
 export function EventLayoutClient({ children, eventId, eventTitle }: EventLayoutClientProps) {
     const router = useRouter()
     const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
     const handleCancelled = () => {
         router.refresh()
@@ -34,6 +38,16 @@ export function EventLayoutClient({ children, eventId, eventTitle }: EventLayout
                 <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 md:px-6">
                     <SidebarTrigger className="-ml-1 hidden md:flex" />
                     <Separator orientation="vertical" className="mr-2 h-4 hidden md:block" />
+
+                    {/* Mobile: Hamburger + Title */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="-ml-1 md:hidden"
+                        onClick={() => setMobileMenuOpen(true)}
+                    >
+                        <Menu className="h-5 w-5" />
+                    </Button>
                     <h1 className="text-sm font-medium truncate md:hidden">{eventTitle}</h1>
                 </header>
 
@@ -53,6 +67,15 @@ export function EventLayoutClient({ children, eventId, eventTitle }: EventLayout
                 eventId={eventId}
                 eventTitle={eventTitle}
                 onCancelled={handleCancelled}
+            />
+
+            {/* Mobile Menu */}
+            <MobileMenu
+                eventId={eventId}
+                eventTitle={eventTitle}
+                isOpen={mobileMenuOpen}
+                onClose={() => setMobileMenuOpen(false)}
+                onCancelClick={() => setCancelDialogOpen(true)}
             />
         </SidebarProvider>
     )

@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { Copy, Check, MessageCircle, CheckCircle2, Undo2, UserCheck, UserX, DollarSign, Users, UserPlus, UserMinus } from 'lucide-react'
+import { Copy, Check, MessageCircle, CheckCircle2, Undo2, UserCheck, UserX, DollarSign, Users, UserPlus, UserMinus, CreditCard } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { Expense, Attendee } from '@/types/database'
 
@@ -53,6 +54,8 @@ export default function SummaryPage({ params }: SummaryPageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [savingPayment, setSavingPayment] = useState<string | null>(null)
+  const [showBankInfoModal, setShowBankInfoModal] = useState(false)
+  const [selectedBankInfo, setSelectedBankInfo] = useState<{ name: string; info: BankInfo } | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -456,18 +459,18 @@ export default function SummaryPage({ params }: SummaryPageProps) {
             {getGroupedTransfers().map(({ debtor, transfers }) => (
               <div key={debtor.attendee.id} className="space-y-3">
                 {/* Debtor Header */}
-                <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-700">
-                  <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 font-medium text-sm">
-                    {debtor.attendee.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 font-medium text-sm">
+                      {debtor.attendee.name.charAt(0).toUpperCase()}
+                    </div>
                     <p className="font-medium text-zinc-900 dark:text-zinc-100">
                       {debtor.attendee.name}
                     </p>
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      Debe: {formatCurrency(Math.abs(debtor.balance))}
-                    </p>
                   </div>
+                  <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                    Debe: {formatCurrency(Math.abs(debtor.balance))}
+                  </p>
                 </div>
 
                 {/* Transfers for this debtor */}
@@ -482,6 +485,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                         : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
                         }`}
                     >
+                      {/* Header: Name + Amount on same line */}
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-500">→</span>
@@ -491,91 +495,6 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                           {formatCurrency(amount)}
                         </Badge>
                       </div>
-
-                      {/* Bank Info */}
-                      {creditor.bankInfo && (
-                        <div className="mb-3 p-3 bg-white dark:bg-zinc-800 rounded-lg space-y-2">
-                          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            Datos bancarios:
-                          </p>
-                          <div className="grid gap-2 text-sm">
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">Titular:</span>
-                              <div className="flex items-center gap-2">
-                                <span>{creditor.bankInfo.holder_name}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={() => copyToClipboard(creditor.bankInfo!.holder_name, `titular-${transferId}`)}
-                                >
-                                  {copiedField === `titular-${transferId}` ? (
-                                    <Check className="h-3 w-3 text-green-500" />
-                                  ) : (
-                                    <Copy className="h-3 w-3" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">Banco:</span>
-                              <div className="flex items-center gap-2">
-                                <span>{creditor.bankInfo.bank_name}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={() => copyToClipboard(creditor.bankInfo!.bank_name, `bank-${transferId}`)}
-                                >
-                                  {copiedField === `bank-${transferId}` ? (
-                                    <Check className="h-3 w-3 text-green-500" />
-                                  ) : (
-                                    <Copy className="h-3 w-3" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">CLABE:</span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono">{creditor.bankInfo.clabe}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={() => copyToClipboard(creditor.bankInfo!.clabe, `clabe-${transferId}`)}
-                                >
-                                  {copiedField === `clabe-${transferId}` ? (
-                                    <Check className="h-3 w-3 text-green-500" />
-                                  ) : (
-                                    <Copy className="h-3 w-3" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            {creditor.bankInfo.account_number && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-zinc-500">Cuenta:</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono">{creditor.bankInfo.account_number}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => copyToClipboard(creditor.bankInfo!.account_number!, `account-${transferId}`)}
-                                  >
-                                    {copiedField === `account-${transferId}` ? (
-                                      <Check className="h-3 w-3 text-green-500" />
-                                    ) : (
-                                      <Copy className="h-3 w-3" />
-                                    )}
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
 
                       {/* Actions */}
                       <div className="flex gap-2">
@@ -590,6 +509,23 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                               <MessageCircle className="h-4 w-4 mr-2" />
                               WhatsApp
                             </Button>
+                            {creditor.bankInfo && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => {
+                                  setSelectedBankInfo({
+                                    name: creditor.attendee.name,
+                                    info: creditor.bankInfo!
+                                  })
+                                  setShowBankInfoModal(true)
+                                }}
+                              >
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Ver datos
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -635,6 +571,94 @@ export default function SummaryPage({ params }: SummaryPageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Bank Info Modal */}
+      <Dialog open={showBankInfoModal} onOpenChange={setShowBankInfoModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Datos bancarios de {selectedBankInfo?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedBankInfo && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                  <div>
+                    <p className="text-sm text-zinc-500">Titular</p>
+                    <p className="font-medium">{selectedBankInfo.info.holder_name}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(selectedBankInfo.info.holder_name, 'modal-holder')}
+                  >
+                    {copiedField === 'modal-holder' ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                  <div>
+                    <p className="text-sm text-zinc-500">Banco</p>
+                    <p className="font-medium">{selectedBankInfo.info.bank_name}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(selectedBankInfo.info.bank_name, 'modal-bank')}
+                  >
+                    {copiedField === 'modal-bank' ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                  <div>
+                    <p className="text-sm text-zinc-500">CLABE</p>
+                    <p className="font-medium font-mono">{selectedBankInfo.info.clabe}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(selectedBankInfo.info.clabe, 'modal-clabe')}
+                  >
+                    {copiedField === 'modal-clabe' ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {selectedBankInfo.info.account_number && (
+                  <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                    <div>
+                      <p className="text-sm text-zinc-500">Número de cuenta</p>
+                      <p className="font-medium font-mono">{selectedBankInfo.info.account_number}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(selectedBankInfo.info.account_number!, 'modal-account')}
+                    >
+                      {copiedField === 'modal-account' ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

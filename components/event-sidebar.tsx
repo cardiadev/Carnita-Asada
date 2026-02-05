@@ -58,16 +58,6 @@ const navItems = [
         href: "/shopping",
     },
     {
-        title: "Sugerencias",
-        icon: Lightbulb,
-        href: "/suggestions",
-    },
-    {
-        title: "Recetas",
-        icon: ChefHat,
-        href: "/recipes",
-    },
-    {
         title: "Gastos",
         icon: Receipt,
         href: "/expenses",
@@ -76,6 +66,16 @@ const navItems = [
         title: "Pagos",
         icon: PieChart,
         href: "/summary",
+    },
+    {
+        title: "Sugerencias",
+        icon: Lightbulb,
+        href: "/suggestions",
+    },
+    {
+        title: "Recetas",
+        icon: ChefHat,
+        href: "/recipes",
     },
     {
         title: "Reporte",
