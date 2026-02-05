@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Save, MapPin, Calendar, Clock, FileText, Link2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toDateTimeLocal } from '@/lib/utils/date'
 
 interface SettingsPageProps {
@@ -16,12 +17,12 @@ interface SettingsPageProps {
 
 interface EventData {
     id: string
-    nano_id: string
+    nanoId: string
     title: string
-    event_date: string
+    eventDate: string
     location: string | null
     description: string | null
-    maps_url: string | null
+    mapsUrl: string | null
 }
 
 export default function SettingsPage({ params }: SettingsPageProps) {
@@ -45,10 +46,10 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 if (res.ok) {
                     setEvent(data)
                     setTitle(data.title || '')
-                    setEventDate(data.event_date ? toDateTimeLocal(new Date(data.event_date)) : '')
+                    setEventDate(data.eventDate ? toDateTimeLocal(new Date(data.eventDate)) : '')
                     setLocation(data.location || '')
                     setDescription(data.description || '')
-                    setMapsUrl(data.maps_url || '')
+                    setMapsUrl(data.mapsUrl || '')
                 }
             } catch (error) {
                 console.error('Error fetching event:', error)
@@ -98,14 +99,16 @@ export default function SettingsPage({ params }: SettingsPageProps) {
     if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-6 max-w-2xl">
-                <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                        <Card key={i}>
-                            <CardContent className="p-4">
-                                <div className="h-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                            </CardContent>
-                        </Card>
-                    ))}
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48 mb-6" />
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="space-y-2">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         )

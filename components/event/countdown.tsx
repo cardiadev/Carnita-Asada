@@ -97,7 +97,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
           <EventHeader />
           <div className="text-center">
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              🔥 ¡Se armó la carnita asada!
+              🔥 ¡Se armó la carnita asada! 🔥
             </p>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
               {formatDateTime(targetDate)}

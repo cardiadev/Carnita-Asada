@@ -83,30 +83,35 @@ export default function ChartsPage({ params }: ChartsPageProps) {
     useEffect(() => {
         if (!pieChartRef.current || expensesByPerson.length === 0) return
 
+        const container = pieChartRef.current.parentElement
+        if (!container) return
+
         const svg = d3.select(pieChartRef.current)
         svg.selectAll('*').remove()
 
-        const width = 300
+        const width = Math.min(container.clientWidth, 400)
         const height = 300
         const radius = Math.min(width, height) / 2 - 20
 
         const g = svg
-            .attr('width', width)
+            .attr('width', '100%')
             .attr('height', height)
+            .attr('viewBox', `0 0 ${width} ${height}`)
             .append('g')
             .attr('transform', `translate(${width / 2}, ${height / 2})`)
 
         const color = d3.scaleOrdinal<string>()
             .domain(expensesByPerson.map(d => d.name))
-            .range(['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5'])
+            .range(['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5', '#ea580c', '#c2410c'])
 
         const pie = d3.pie<PieData>()
             .value(d => d.value)
             .sort(null)
 
         const arc = d3.arc<d3.PieArcDatum<PieData>>()
-            .innerRadius(0)
+            .innerRadius(radius * 0.4) // Semi-donut looks more modern
             .outerRadius(radius)
+            .cornerRadius(4)
 
         const data: PieData[] = expensesByPerson.map(d => ({ name: d.name, value: d.total }))
 
@@ -123,19 +128,21 @@ export default function ChartsPage({ params }: ChartsPageProps) {
             .attr('stroke-width', 2)
             .style('transition', 'all 0.3s')
             .on('mouseover', function () {
-                d3.select(this).style('opacity', 0.8)
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr('d', (d: any) => d3.arc<d3.PieArcDatum<PieData>>()
+                        .innerRadius(radius * 0.4)
+                        .outerRadius(radius + 10)
+                        .cornerRadius(4)(d)
+                    )
             })
             .on('mouseout', function () {
-                d3.select(this).style('opacity', 1)
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr('d', (d: any) => arc(d))
             })
-
-        arcs.append('text')
-            .attr('transform', d => `translate(${arc.centroid(d)})`)
-            .attr('text-anchor', 'middle')
-            .attr('font-size', '12px')
-            .attr('fill', 'white')
-            .attr('font-weight', 'bold')
-            .text(d => d.data.name.split(' ')[0])
 
     }, [expensesByPerson])
 
@@ -143,16 +150,20 @@ export default function ChartsPage({ params }: ChartsPageProps) {
     useEffect(() => {
         if (!barChartRef.current || expensesByPerson.length === 0) return
 
+        const container = barChartRef.current.parentElement
+        if (!container) return
+
         const svg = d3.select(barChartRef.current)
         svg.selectAll('*').remove()
 
-        const margin = { top: 20, right: 20, bottom: 40, left: 80 }
-        const width = 350 - margin.left - margin.right
-        const height = Math.max(200, expensesByPerson.length * 40)
+        const margin = { top: 20, right: 30, bottom: 40, left: 100 }
+        const width = container.clientWidth - margin.left - margin.right
+        const height = Math.max(250, expensesByPerson.length * 45)
 
         const g = svg
-            .attr('width', width + margin.left + margin.right)
+            .attr('width', '100%')
             .attr('height', height + margin.top + margin.bottom)
+            .attr('viewBox', `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
             .append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
@@ -165,7 +176,19 @@ export default function ChartsPage({ params }: ChartsPageProps) {
         const y = d3.scaleBand()
             .domain(sortedData.map(d => d.name))
             .range([0, height])
-            .padding(0.3)
+            .padding(0.2)
+
+        g.selectAll('.bar-bg')
+            .data(sortedData)
+            .enter()
+            .append('rect')
+            .attr('class', 'bar-bg')
+            .attr('y', d => y(d.name) || 0)
+            .attr('height', y.bandwidth())
+            .attr('x', 0)
+            .attr('width', width)
+            .attr('fill', '#f4f4f5')
+            .attr('rx', 6)
 
         g.selectAll('.bar')
             .data(sortedData)
@@ -176,22 +199,41 @@ export default function ChartsPage({ params }: ChartsPageProps) {
             .attr('height', y.bandwidth())
             .attr('x', 0)
             .attr('width', 0)
-            .attr('fill', '#f97316')
-            .attr('rx', 4)
+            .attr('fill', 'url(#bar-gradient)')
+            .attr('rx', 6)
             .transition()
-            .duration(800)
+            .duration(1000)
             .attr('width', d => x(d.total))
 
+        // Add Gradient
+        const defs = svg.append('defs')
+        const gradient = defs.append('linearGradient')
+            .attr('id', 'bar-gradient')
+            .attr('x1', '0%')
+            .attr('y1', '0%')
+            .attr('x2', '100%')
+            .attr('y2', '0%')
+
+        gradient.append('stop').attr('offset', '0%').attr('stop-color', '#ea580c')
+        gradient.append('stop').attr('offset', '100%').attr('stop-color', '#fb923c')
+
         g.append('g')
-            .call(d3.axisLeft(y))
+            .call(d3.axisLeft(y).tickSize(0))
             .selectAll('text')
-            .attr('font-size', '12px')
+            .attr('font-size', '14px')
+            .attr('font-weight', '500')
+            .attr('dx', '-10px')
+            .attr('class', 'fill-zinc-600 dark:fill-zinc-400')
 
         g.append('g')
             .attr('transform', `translate(0, ${height})`)
-            .call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d}`))
+            .call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d}`).tickSize(-height))
             .selectAll('text')
-            .attr('font-size', '10px')
+            .attr('font-size', '12px')
+            .attr('dy', '15px')
+            .attr('class', 'fill-zinc-400')
+
+        g.selectAll('.domain, .tick line').attr('stroke', '#e4e4e7').attr('stroke-dasharray', '4,4')
 
     }, [expensesByPerson])
 
@@ -258,11 +300,24 @@ export default function ChartsPage({ params }: ChartsPageProps) {
     if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-6 max-w-4xl">
-                <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
+                <div className="grid gap-6">
+                    {/* Summary Stats Skeletons */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {[...Array(2)].map((_, i) => (
+                            <Card key={i}>
+                                <CardContent className="p-4">
+                                    <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded mb-2 animate-pulse" />
+                                    <div className="h-8 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* Charts Skeletons */}
+                    {[...Array(2)].map((_, i) => (
                         <Card key={i}>
                             <CardContent className="p-4">
-                                <div className="h-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                                <div className="h-64 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                             </CardContent>
                         </Card>
                     ))}
@@ -275,7 +330,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
         <div className="container mx-auto px-4 py-6 max-w-4xl">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                    Gráficos
+                    Reporte
                 </h1>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                     Visualización de gastos y pagos
@@ -283,6 +338,25 @@ export default function ChartsPage({ params }: ChartsPageProps) {
             </div>
 
             <div className="grid gap-6">
+                {/* Summary Stats at the top */}
+                <div className="grid grid-cols-2 gap-4">
+                    <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 overflow-hidden">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">Total gastado</p>
+                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                ${totalExpenses.toFixed(2)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                    <Card className="overflow-hidden bg-zinc-50 dark:bg-zinc-900/50">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">Por persona</p>
+                            <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                                ${perPerson.toFixed(2)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
                 {/* Pie Chart */}
                 <Card className="overflow-hidden">
                     <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
@@ -362,25 +436,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                     </CardContent>
                 </Card>
 
-                {/* Summary Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                    <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 overflow-hidden">
-                        <CardContent className="p-4">
-                            <p className="text-sm text-zinc-600 dark:text-zinc-400">Total gastado</p>
-                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                ${totalExpenses.toFixed(2)}
-                            </p>
-                        </CardContent>
-                    </Card>
-                    <Card className="overflow-hidden">
-                        <CardContent className="p-4">
-                            <p className="text-sm text-zinc-600 dark:text-zinc-400">Por persona</p>
-                            <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                                ${perPerson.toFixed(2)}
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
+
             </div>
         </div>
     )

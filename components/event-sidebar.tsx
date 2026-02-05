@@ -57,6 +57,11 @@ const navItems = [
         href: "/shopping",
     },
     {
+        title: "Sugerencias",
+        icon: Lightbulb,
+        href: "/suggestions",
+    },
+    {
         title: "Gastos",
         icon: Receipt,
         href: "/expenses",
@@ -70,11 +75,6 @@ const navItems = [
         title: "Reporte",
         icon: BarChart3,
         href: "/report",
-    },
-    {
-        title: "Sugerencias",
-        icon: Lightbulb,
-        href: "/suggestions",
     },
     {
         title: "Ajustes",

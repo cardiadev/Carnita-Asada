@@ -310,7 +310,13 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
-                <div className="h-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                    <div className="h-4 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                  </div>
+                  <div className="h-6 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                </div>
               </CardContent>
             </Card>
           ))}

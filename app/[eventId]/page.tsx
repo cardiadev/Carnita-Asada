@@ -38,7 +38,7 @@ interface PersonBalance {
 const MEAT_SUGGESTIONS = [
   { name: 'Arrachera', quantity: '150-200g', icon: '🥩' },
   { name: 'Costilla', quantity: '200-250g', icon: '🍖' },
-  { name: 'Chorizo', quantity: '100g', icon: '🌭' },
+  { name: 'Chorizo', quantity: '100g', icon: '🥩' },
   { name: 'Pollo', quantity: '150g', icon: '🍗' },
   { name: 'Bistec', quantity: '150g', icon: '🥩' },
 ]
@@ -127,24 +127,7 @@ export default async function EventPage({ params }: EventPageProps) {
       {/* Location with Maps Link - MOVED TO COUNTDOWN */}
 
 
-      {/* Announcements / Description */}
-      {event.description && (
-        <Card className="mb-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <Megaphone className="h-5 w-5" />
-              Avisos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line">
-              {event.description}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats - More Visual */}
+      {/* Stats - More Visual (CRITICAL: PRIORITY AT TOP) */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm">
           <CardContent className="p-4">
@@ -165,14 +148,14 @@ export default async function EventPage({ params }: EventPageProps) {
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
                 <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <p className="text-base font-semibold tracking-wide">Toca por persona</p>
+                <p className="text-base font-semibold tracking-wide">Por persona</p>
               </div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(perPerson)}
               </p>
               {activeCount !== attendeesCount && (
                 <p className="text-xs text-zinc-500">
-                  Entre {activeCount} personas
+                  Entre {activeCount}
                 </p>
               )}
             </div>
@@ -201,6 +184,23 @@ export default async function EventPage({ params }: EventPageProps) {
                 style={{ width: `${(completedPayments.length / balances.length) * 100}%` }}
               />
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Announcements / Description */}
+      {event.description && (
+        <Card className="mb-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <Megaphone className="h-5 w-5" />
+              Avisos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line text-sm">
+              {event.description}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -244,7 +244,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 </div>
               </div>
             ))}
-            <Button asChild className="w-full mt-4" variant="secondary">
+            <Button asChild className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all hover:scale-[1.01]" variant="default">
               <Link href={`/${eventId}/summary`}>
                 Ver pagos y transferencias
                 <ArrowRight className="h-4 w-4 ml-2" />

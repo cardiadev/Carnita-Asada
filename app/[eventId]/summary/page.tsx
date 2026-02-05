@@ -276,7 +276,16 @@ export default function SummaryPage({ params }: SummaryPageProps) {
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
-                <div className="h-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-zinc-200 dark:bg-zinc-700 rounded-full animate-pulse" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                      <div className="h-3 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                </div>
               </CardContent>
             </Card>
           ))}

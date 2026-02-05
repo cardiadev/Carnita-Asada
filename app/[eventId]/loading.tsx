@@ -31,26 +31,27 @@ export default function Loading() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         {[...Array(2)].map((_, i) => (
           <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-20" />
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
+              <Skeleton className="h-4 w-20 mb-2" />
               <Skeleton className="h-8 w-24" />
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <Skeleton className="h-6 w-32 mb-4" />
+      {/* Quick Actions / Label */}
+      <div className="mb-4">
+        <Skeleton className="h-6 w-32" />
+      </div>
+
       <div className="space-y-3">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="flex items-center gap-4 py-4">
+            <CardContent className="flex items-center gap-4 p-4">
               <Skeleton className="h-12 w-12 rounded-full" />
               <div className="flex-1">
                 <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-48 mt-1" />
+                <Skeleton className="h-4 w-48 mt-2" />
               </div>
             </CardContent>
           </Card>

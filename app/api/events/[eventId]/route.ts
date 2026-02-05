@@ -43,7 +43,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       eventDate: event.event_date,
       location: event.location,
       description: event.description,
-      maps_url: event.maps_url,
+      mapsUrl: event.maps_url,
       cancelledAt: event.cancelled_at,
       peopleCount: event.people_count,
       attendees: event.attendees,
