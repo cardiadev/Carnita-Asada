@@ -124,12 +124,36 @@ export default function Home() {
               <Button
                 type="submit"
                 variant="outline"
-                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 py-6 text-lg font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 shadow-lg transition-all active:scale-[0.98]"
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando...' : 'Crear Carnita Asada'}
               </Button>
             </form>
+
+            <div className="text-center text-sm text-zinc-500 dark:text-zinc-400 pt-4 space-y-1">
+              <p>
+                Creado con <span className="text-red-500">❤️</span> por{' '}
+                <a
+                  href="https://carlosdiaz.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                >
+                  Carlos Diaz
+                </a>
+              </p>
+              <p>
+                <a
+                  href="https://github.com/cardiadev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-zinc-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                >
+                  @cardiadev
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>

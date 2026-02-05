@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Copy, Check, MessageCircle, CheckCircle2, Undo2, UserCheck, UserX, DollarSign, Users, UserPlus, UserMinus, CreditCard } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -56,6 +58,17 @@ export default function SummaryPage({ params }: SummaryPageProps) {
   const [savingPayment, setSavingPayment] = useState<string | null>(null)
   const [showBankInfoModal, setShowBankInfoModal] = useState(false)
   const [selectedBankInfo, setSelectedBankInfo] = useState<{ name: string; info: BankInfo } | null>(null)
+
+  // Add bank info modal state
+  const [showAddBankModal, setShowAddBankModal] = useState(false)
+  const [addBankAttendee, setAddBankAttendee] = useState<Attendee | null>(null)
+  const [newBankInfo, setNewBankInfo] = useState({
+    holder_name: '',
+    bank_name: '',
+    clabe: '',
+    account_number: '',
+  })
+  const [isSavingBank, setIsSavingBank] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -162,6 +175,54 @@ export default function SummaryPage({ params }: SummaryPageProps) {
     }
   }
 
+  const handleOpenAddBankModal = (attendee: Attendee) => {
+    setAddBankAttendee(attendee)
+    setNewBankInfo({
+      holder_name: attendee.name,
+      bank_name: '',
+      clabe: '',
+      account_number: '',
+    })
+    setShowAddBankModal(true)
+  }
+
+  const handleSaveNewBankInfo = async () => {
+    if (!addBankAttendee || !newBankInfo.holder_name || !newBankInfo.bank_name || !newBankInfo.clabe) {
+      toast.error('Por favor completa los campos requeridos')
+      return
+    }
+
+    setIsSavingBank(true)
+    try {
+      const res = await fetch('/api/bank-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attendeeId: addBankAttendee.id,
+          ...newBankInfo,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Error al guardar')
+
+      const savedBankInfo = await res.json()
+
+      // Update local state
+      setBankInfoMap(prev => ({
+        ...prev,
+        [addBankAttendee.id]: savedBankInfo
+      }))
+
+      toast.success('Datos bancarios guardados')
+      setShowAddBankModal(false)
+      setAddBankAttendee(null)
+    } catch {
+      toast.error('Error al guardar datos bancarios')
+    } finally {
+      setIsSavingBank(false)
+    }
+  }
+
   const sendWhatsApp = (creditorName: string, amount: number, bankInfo?: BankInfo | null) => {
     let message = `Hola! Te transferí ${formatCurrency(amount)} para la carnita 🥩`
     if (bankInfo) {
@@ -256,20 +317,51 @@ export default function SummaryPage({ params }: SummaryPageProps) {
     }
   }
 
-  // Group transfers by debtor
+  // Group transfers by debtor - proper settlement algorithm
   const getGroupedTransfers = () => {
-    const debtors = balances.filter(b => b.balance < 0)
-    const creditors = balances.filter(b => b.balance > 0)
+    // Create mutable copies of balances
+    const debtorBalances = balances
+      .filter(b => b.balance < 0)
+      .map(b => ({ ...b, remaining: Math.abs(b.balance) }))
 
-    return debtors.map(debtor => ({
-      debtor,
-      transfers: creditors.map(creditor => ({
-        creditor,
-        amount: Math.min(Math.abs(debtor.balance), creditor.balance),
-        isPaid: isTransferPaid(debtor.attendee.id, creditor.attendee.id),
-        transferId: `${debtor.attendee.id}-${creditor.attendee.id}`
-      }))
-    }))
+    const creditorBalances = balances
+      .filter(b => b.balance > 0)
+      .map(b => ({ ...b, remaining: b.balance }))
+
+    // Calculate transfers for each debtor
+    return debtorBalances.map(debtor => {
+      const transfers: Array<{
+        creditor: PersonBalance
+        amount: number
+        isPaid: boolean
+        transferId: string
+      }> = []
+
+      let debtRemaining = debtor.remaining
+
+      for (const creditor of creditorBalances) {
+        if (debtRemaining <= 0 || creditor.remaining <= 0) continue
+
+        const transferAmount = Math.min(debtRemaining, creditor.remaining)
+
+        if (transferAmount > 0.01) { // Avoid tiny amounts due to floating point
+          transfers.push({
+            creditor,
+            amount: transferAmount,
+            isPaid: isTransferPaid(debtor.attendee.id, creditor.attendee.id),
+            transferId: `${debtor.attendee.id}-${creditor.attendee.id}`
+          })
+
+          debtRemaining -= transferAmount
+          creditor.remaining -= transferAmount
+        }
+      }
+
+      return {
+        debtor,
+        transfers
+      }
+    })
   }
 
   if (isLoading) {
@@ -356,25 +448,20 @@ export default function SummaryPage({ params }: SummaryPageProps) {
             balances.map((b) => (
               <div key={b.attendee.id}>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 font-medium hidden sm:flex">
-                      {b.attendee.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                          {b.attendee.name}
-                        </p>
-                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          <span className="hidden sm:inline">Incluido en gastos</span>
-                          <span className="sm:hidden">Incluido</span>
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Pagó: {formatCurrency(b.paid)}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                        {b.attendee.name}
                       </p>
+                      <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        <span className="hidden sm:inline">Incluido en gastos</span>
+                        <span className="sm:hidden">Incluido</span>
+                      </Badge>
                     </div>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Pagó: {formatCurrency(b.paid)}
+                    </p>
                   </div>
 
                   <div className="flex flex-col items-end gap-2">
@@ -427,14 +514,9 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                   key={a.id}
                   className="flex items-center justify-between p-3 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-medium text-sm hidden sm:flex">
-                      {a.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                      {a.name}
-                    </span>
-                  </div>
+                  <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                    {a.name}
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -461,14 +543,9 @@ export default function SummaryPage({ params }: SummaryPageProps) {
               <div key={debtor.attendee.id} className="space-y-3">
                 {/* Debtor Header */}
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-700">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 font-medium text-sm hidden sm:flex">
-                      {debtor.attendee.name.charAt(0).toUpperCase()}
-                    </div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {debtor.attendee.name}
-                    </p>
-                  </div>
+                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {debtor.attendee.name}
+                  </p>
                   <p className="text-sm text-red-600 dark:text-red-400 font-medium">
                     Debe: {formatCurrency(Math.abs(debtor.balance))}
                   </p>
@@ -481,7 +558,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                   return (
                     <div
                       key={transferId}
-                      className={`p-4 rounded-lg border ml-4 ${isPaid
+                      className={`p-4 rounded-lg border ${isPaid
                         ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                         : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
                         }`}
@@ -561,9 +638,17 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                       </div>
 
                       {!creditor.bankInfo && !isPaid && (
-                        <p className="text-sm text-zinc-500 mt-2">
-                          💡 {creditor.attendee.name} puede agregar sus datos bancarios en Asistentes
-                        </p>
+                        <div className="mt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenAddBankModal(creditor.attendee)}
+                            className="w-full"
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Agregar datos bancarios
+                          </Button>
+                        </div>
                       )}
                     </div>
                   )
@@ -659,6 +744,71 @@ export default function SummaryPage({ params }: SummaryPageProps) {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Bank Info Modal */}
+      <Dialog open={showAddBankModal} onOpenChange={setShowAddBankModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Datos bancarios de {addBankAttendee?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="holder_name">Nombre del titular *</Label>
+              <Input
+                id="holder_name"
+                value={newBankInfo.holder_name}
+                onChange={(e) => setNewBankInfo({ ...newBankInfo, holder_name: e.target.value })}
+                placeholder="Nombre completo"
+                disabled={isSavingBank}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bank_name">Banco *</Label>
+              <Input
+                id="bank_name"
+                value={newBankInfo.bank_name}
+                onChange={(e) => setNewBankInfo({ ...newBankInfo, bank_name: e.target.value })}
+                placeholder="Ej: BBVA, Banorte, etc."
+                disabled={isSavingBank}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clabe">CLABE interbancaria *</Label>
+              <Input
+                id="clabe"
+                value={newBankInfo.clabe}
+                onChange={(e) => setNewBankInfo({ ...newBankInfo, clabe: e.target.value })}
+                placeholder="18 dígitos"
+                maxLength={18}
+                disabled={isSavingBank}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="account_number">Número de cuenta (opcional)</Label>
+              <Input
+                id="account_number"
+                value={newBankInfo.account_number}
+                onChange={(e) => setNewBankInfo({ ...newBankInfo, account_number: e.target.value })}
+                placeholder="Número de cuenta"
+                disabled={isSavingBank}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddBankModal(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSaveNewBankInfo}
+              disabled={isSavingBank}
+              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+            >
+              {isSavingBank ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

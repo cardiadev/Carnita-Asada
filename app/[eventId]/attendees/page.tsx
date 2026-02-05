@@ -443,28 +443,20 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                 {/* ===== DESKTOP LAYOUT ===== */}
                 <div className="hidden md:flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${attendee.exclude_from_split
-                      ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                      : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      }`}>
-                      {attendee.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {attendee.name}
-                      </p>
-                      {attendee.exclude_from_split ? (
-                        <Badge variant="secondary" className="text-sm bg-zinc-200 dark:bg-zinc-700">
-                          <UserMinus className="h-3 w-3 mr-1" />
-                          Excluido
-                        </Badge>
-                      ) : (
-                        <Badge className="text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          <Check className="h-3 w-3 mr-1" />
-                          Incluido en gastos
-                        </Badge>
-                      )}
-                    </div>
+                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {attendee.name}
+                    </p>
+                    {attendee.exclude_from_split ? (
+                      <Badge variant="secondary" className="text-sm bg-zinc-200 dark:bg-zinc-700">
+                        <UserMinus className="h-3 w-3 mr-1" />
+                        Excluido
+                      </Badge>
+                    ) : (
+                      <Badge className="text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <Check className="h-3 w-3 mr-1" />
+                        Incluido en gastos
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1">
