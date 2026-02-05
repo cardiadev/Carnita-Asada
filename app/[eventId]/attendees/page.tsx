@@ -14,7 +14,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { BackButton } from '@/components/common/back-button'
 import { Pencil, Trash2, UserMinus, UserPlus, CreditCard } from 'lucide-react'
 import type { Attendee } from '@/types/database'
 
@@ -258,9 +257,6 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <BackButton />
-        </div>
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
           Asistentes
         </h1>

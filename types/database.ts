@@ -15,6 +15,8 @@ export interface Database {
           nano_id: string
           title: string
           event_date: string
+          location: string | null
+          cancelled_at: string | null
           people_count: number
           created_at: string
           updated_at: string
@@ -24,6 +26,8 @@ export interface Database {
           nano_id: string
           title: string
           event_date: string
+          location?: string | null
+          cancelled_at?: string | null
           people_count?: number
           created_at?: string
           updated_at?: string
@@ -33,6 +37,8 @@ export interface Database {
           nano_id?: string
           title?: string
           event_date?: string
+          location?: string | null
+          cancelled_at?: string | null
           people_count?: number
           created_at?: string
           updated_at?: string

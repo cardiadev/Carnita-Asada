@@ -15,6 +15,8 @@ interface EventWithAttendees {
   nano_id: string
   title: string
   event_date: string
+  location: string | null
+  cancelled_at: string | null
   people_count: number
   created_at: string
   updated_at: string
@@ -92,7 +94,11 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Countdown */}
       <div className="mb-6">
-        <Countdown targetDate={event.event_date} />
+        <Countdown
+          targetDate={event.event_date}
+          location={event.location}
+          cancelled={!!event.cancelled_at}
+        />
       </div>
 
       {/* Stats */}

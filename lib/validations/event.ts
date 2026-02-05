@@ -11,6 +11,7 @@ export const createEventSchema = z.object({
     .refine((date) => new Date(date) > new Date(), {
       message: 'La fecha debe ser en el futuro',
     }),
+  location: z.string().max(255).optional().nullable(),
 })
 
 export const updateEventSchema = z.object({
@@ -21,6 +22,7 @@ export const updateEventSchema = z.object({
     .optional(),
   eventDate: z.string().optional(),
   peopleCount: z.number().int().min(0).optional(),
+  location: z.string().max(255).optional().nullable(),
 })
 
 export type CreateEventInput = z.infer<typeof createEventSchema>

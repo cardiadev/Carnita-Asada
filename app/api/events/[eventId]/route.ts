@@ -41,6 +41,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       nanoId: event.nano_id,
       title: event.title,
       eventDate: event.event_date,
+      location: event.location,
+      cancelledAt: event.cancelled_at,
       peopleCount: event.people_count,
       attendees: event.attendees,
       totalExpenses,
@@ -86,9 +88,16 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     const updateData: Record<string, unknown> = {}
-    if (result.data.title) updateData.title = result.data.title
-    if (result.data.eventDate) updateData.event_date = result.data.eventDate
-    if (result.data.peopleCount !== undefined) updateData.people_count = result.data.peopleCount
+
+    // Handle cancel request (soft delete)
+    if (body.cancel === true) {
+      updateData.cancelled_at = new Date().toISOString()
+    } else {
+      if (result.data.title) updateData.title = result.data.title
+      if (result.data.eventDate) updateData.event_date = result.data.eventDate
+      if (result.data.peopleCount !== undefined) updateData.people_count = result.data.peopleCount
+      if (result.data.location !== undefined) updateData.location = result.data.location
+    }
 
     const { data, error } = await supabase
       .from('events')
@@ -110,6 +119,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       nanoId: data.nano_id,
       title: data.title,
       eventDate: data.event_date,
+      location: data.location,
+      cancelledAt: data.cancelled_at,
       peopleCount: data.people_count,
     })
   } catch (error) {

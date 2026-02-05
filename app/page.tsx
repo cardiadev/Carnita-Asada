@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { toast } from 'sonner'
+import { MapPin } from 'lucide-react'
 
 export default function Home() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
+  const [location, setLocation] = useState('')
   const [eventDate, setEventDate] = useState<Date | undefined>(undefined)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,6 +39,7 @@ export default function Home() {
         body: JSON.stringify({
           title: title.trim(),
           eventDate: eventDate.toISOString(),
+          location: location.trim() || null,
         }),
       })
 
@@ -95,6 +98,20 @@ export default function Home() {
                   minDate={new Date()}
                   disabled={isLoading}
                   placeholder="Seleccionar fecha y hora"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location" className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Ubicación <span className="text-zinc-400 text-xs">(opcional)</span>
+                </Label>
+                <Input
+                  id="location"
+                  placeholder="Ej: Casa de Vivi, Parque Central"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
 

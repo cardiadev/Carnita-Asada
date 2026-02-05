@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { Copy, Check, MessageCircle, CheckCircle2 } from 'lucide-react'
+import { Copy, Check, MessageCircle, CheckCircle2, Undo2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { Expense, Attendee } from '@/types/database'
 
@@ -27,6 +27,15 @@ interface BankInfo {
   account_number: string | null
 }
 
+interface Payment {
+  id: string
+  event_id: string
+  from_attendee_id: string
+  to_attendee_id: string
+  amount: number
+  status: string
+}
+
 interface PersonBalance {
   attendee: Attendee
   paid: number
@@ -40,9 +49,10 @@ export default function SummaryPage({ params }: SummaryPageProps) {
   const [expenses, setExpenses] = useState<ExpenseWithAttendee[]>([])
   const [attendees, setAttendees] = useState<Attendee[]>([])
   const [bankInfoMap, setBankInfoMap] = useState<Record<string, BankInfo>>({})
+  const [payments, setPayments] = useState<Payment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [copiedField, setCopiedField] = useState<string | null>(null)
-  const [paidTransfers, setPaidTransfers] = useState<Set<string>>(new Set())
+  const [savingPayment, setSavingPayment] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +86,11 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         const expRes = await fetch(`/api/expenses?eventId=${eventId}`)
         const expData = await expRes.json()
         if (expRes.ok) setExpenses(expData)
+
+        // Obtener pagos guardados
+        const paymentsRes = await fetch(`/api/payments?eventId=${eventId}`)
+        const paymentsData = await paymentsRes.json()
+        if (paymentsRes.ok) setPayments(paymentsData)
       } catch (error) {
         console.error('Error fetching data:', error)
         toast.error('Error al cargar los datos')
@@ -86,6 +101,23 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
     fetchData()
   }, [eventId])
+
+  // Check if a transfer is paid
+  const isTransferPaid = (fromId: string, toId: string) => {
+    return payments.some(p =>
+      p.from_attendee_id === fromId &&
+      p.to_attendee_id === toId &&
+      p.status === 'completed'
+    )
+  }
+
+  // Get payment ID for a transfer
+  const getPaymentId = (fromId: string, toId: string) => {
+    const payment = payments.find(p =>
+      p.from_attendee_id === fromId && p.to_attendee_id === toId
+    )
+    return payment?.id
+  }
 
   // Calcular balances
   const calculateBalances = (): PersonBalance[] => {
@@ -138,9 +170,58 @@ export default function SummaryPage({ params }: SummaryPageProps) {
     window.open(url, '_blank')
   }
 
-  const markAsPaid = (transferId: string) => {
-    setPaidTransfers(prev => new Set([...prev, transferId]))
-    toast.success('¡Marcado como pagado!')
+  const markAsPaid = async (fromAttendeeId: string, toAttendeeId: string, amount: number) => {
+    const transferId = `${fromAttendeeId}-${toAttendeeId}`
+    setSavingPayment(transferId)
+
+    try {
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId,
+          fromAttendeeId,
+          toAttendeeId,
+          amount
+        })
+      })
+
+      if (!res.ok) throw new Error()
+
+      const newPayment = await res.json()
+      setPayments(prev => [...prev.filter(p =>
+        !(p.from_attendee_id === fromAttendeeId && p.to_attendee_id === toAttendeeId)
+      ), newPayment])
+
+      toast.success('¡Pago registrado!')
+    } catch {
+      toast.error('Error al guardar el pago')
+    } finally {
+      setSavingPayment(null)
+    }
+  }
+
+  const undoPayment = async (fromAttendeeId: string, toAttendeeId: string) => {
+    const paymentId = getPaymentId(fromAttendeeId, toAttendeeId)
+    if (!paymentId) return
+
+    const transferId = `${fromAttendeeId}-${toAttendeeId}`
+    setSavingPayment(transferId)
+
+    try {
+      const res = await fetch(`/api/payments?id=${paymentId}`, {
+        method: 'DELETE'
+      })
+
+      if (!res.ok) throw new Error()
+
+      setPayments(prev => prev.filter(p => p.id !== paymentId))
+      toast.success('Pago desmarcado')
+    } catch {
+      toast.error('Error al desmarcar el pago')
+    } finally {
+      setSavingPayment(null)
+    }
   }
 
   if (isLoading) {
@@ -273,7 +354,8 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                 const creditors = balances.filter(b => b.balance > 0)
                 return creditors.map((creditor) => {
                   const transferId = `${debtor.attendee.id}-${creditor.attendee.id}`
-                  const isPaid = paidTransfers.has(transferId)
+                  const isPaid = isTransferPaid(debtor.attendee.id, creditor.attendee.id)
+                  const isSaving = savingPayment === transferId
                   const transferAmount = Math.min(Math.abs(debtor.balance), creditor.balance)
 
                   return (
@@ -302,6 +384,24 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                             Datos bancarios de {creditor.attendee.name}:
                           </p>
                           <div className="grid gap-2 text-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="text-zinc-500">Titular:</span>
+                              <div className="flex items-center gap-2">
+                                <span>{creditor.bankInfo.holder_name}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => copyToClipboard(creditor.bankInfo!.holder_name, `titular-${transferId}`)}
+                                >
+                                  {copiedField === `titular-${transferId}` ? (
+                                    <Check className="h-3 w-3 text-green-500" />
+                                  ) : (
+                                    <Copy className="h-3 w-3" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
                             <div className="flex items-center justify-between">
                               <span className="text-zinc-500">Banco:</span>
                               <div className="flex items-center gap-2">
@@ -358,10 +458,6 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                                 </div>
                               </div>
                             )}
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">Titular:</span>
-                              <span>{creditor.bankInfo.holder_name}</span>
-                            </div>
                           </div>
                         </div>
                       )}
@@ -377,29 +473,42 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                               onClick={() => sendWhatsApp(creditor.attendee.name, transferAmount, creditor.bankInfo)}
                             >
                               <MessageCircle className="h-4 w-4 mr-2" />
-                              Enviar por WhatsApp
+                              WhatsApp
                             </Button>
                             <Button
                               size="sm"
                               className="flex-1 bg-green-600 hover:bg-green-700"
-                              onClick={() => markAsPaid(transferId)}
+                              onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, transferAmount)}
+                              disabled={isSaving}
                             >
                               <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Marcar como pagado
+                              {isSaving ? 'Guardando...' : 'Marcar pagado'}
                             </Button>
                           </>
                         )}
                         {isPaid && (
-                          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="h-5 w-5" />
-                            <span className="font-medium">Pagado</span>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                              <CheckCircle2 className="h-5 w-5" />
+                              <span className="font-medium">Pagado</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => undoPayment(debtor.attendee.id, creditor.attendee.id)}
+                              disabled={isSaving}
+                              className="text-zinc-500 hover:text-zinc-700"
+                            >
+                              <Undo2 className="h-4 w-4 mr-1" />
+                              Deshacer
+                            </Button>
                           </div>
                         )}
                       </div>
 
                       {!creditor.bankInfo && !isPaid && (
                         <p className="text-xs text-zinc-500 mt-2">
-                          💡 {creditor.attendee.name} puede agregar sus datos bancarios en la sección de Asistentes
+                          💡 {creditor.attendee.name} puede agregar sus datos bancarios en Asistentes
                         </p>
                       )}
                     </div>

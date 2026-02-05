@@ -12,6 +12,8 @@ import {
     PieChart,
     BarChart3,
     Share2,
+    XCircle,
+    Heart,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -26,12 +28,14 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarGroupContent,
+    useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 
 interface EventSidebarProps extends React.ComponentProps<typeof Sidebar> {
     eventId: string
     eventTitle?: string
+    onCancelClick?: () => void
 }
 
 const navItems = [
@@ -67,8 +71,10 @@ const navItems = [
     },
 ]
 
-export function EventSidebar({ eventId, eventTitle, ...props }: EventSidebarProps) {
+export function EventSidebar({ eventId, eventTitle, onCancelClick, ...props }: EventSidebarProps) {
     const pathname = usePathname()
+    const { state } = useSidebar()
+    const isCollapsed = state === "collapsed"
 
     const handleShare = async () => {
         const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
@@ -97,23 +103,25 @@ export function EventSidebar({ eventId, eventTitle, ...props }: EventSidebarProp
     }
 
     return (
-        <Sidebar variant="inset" {...props}>
+        <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton size="lg" asChild tooltip={eventTitle || "Carnita Asada"}>
                             <Link href={`/${eventId}`}>
                                 <div className="bg-orange-500 text-white flex aspect-square size-8 items-center justify-center rounded-lg">
                                     <Flame className="size-4" />
                                 </div>
-                                <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">
-                                        {eventTitle || "Carnita Asada"}
-                                    </span>
-                                    <span className="truncate text-xs text-muted-foreground">
-                                        Organiza tu evento
-                                    </span>
-                                </div>
+                                {!isCollapsed && (
+                                    <div className="grid flex-1 text-left text-sm leading-tight">
+                                        <span className="truncate font-medium">
+                                            {eventTitle || "Carnita Asada"}
+                                        </span>
+                                        <span className="truncate text-xs text-muted-foreground">
+                                            Organiza tu evento
+                                        </span>
+                                    </div>
+                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -146,16 +154,39 @@ export function EventSidebar({ eventId, eventTitle, ...props }: EventSidebarProp
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <Button
-                            variant="outline"
-                            className="w-full justify-start gap-2"
-                            onClick={handleShare}
-                        >
+                        <SidebarMenuButton tooltip="Compartir evento" onClick={handleShare}>
                             <Share2 className="h-4 w-4" />
-                            Compartir evento
-                        </Button>
+                            <span>Compartir evento</span>
+                        </SidebarMenuButton>
                     </SidebarMenuItem>
+                    {onCancelClick && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                tooltip="Cancelar evento"
+                                onClick={onCancelClick}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                                <XCircle className="h-4 w-4" />
+                                <span>Cancelar evento</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
                 </SidebarMenu>
+                {!isCollapsed && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground text-center border-t">
+                        <p className="flex items-center justify-center gap-1">
+                            Creado con <Heart className="h-3 w-3 text-red-500 fill-red-500" /> por{' '}
+                            <a
+                                href="https://carlosdiaz.dev"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-orange-600 hover:underline"
+                            >
+                                Carlos Diaz
+                            </a>
+                        </p>
+                    </div>
+                )}
             </SidebarFooter>
         </Sidebar>
     )

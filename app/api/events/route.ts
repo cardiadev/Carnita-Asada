@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { title, eventDate } = result.data
+    const { title, eventDate, location } = result.data
     const nanoId = generateEventId()
 
     const supabase = await createClient()
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
         nano_id: nanoId,
         title,
         event_date: eventDate,
+        location: location || null,
       })
       .select()
       .single()
