@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DateTimePicker } from '@/components/ui/date-time-picker'
 import { toast } from 'sonner'
-import { MapPin, Beef, Heart } from 'lucide-react'
+import { MapPin, Beef } from 'lucide-react'
 
 export default function Home() {
   const router = useRouter()
@@ -59,31 +58,31 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-100 dark:from-zinc-900 dark:to-zinc-800">
-      <main className="container mx-auto px-4 pt-16 pb-24 flex flex-col items-center justify-center min-h-screen">
-        <div className="text-center mb-10 flex flex-col items-center">
-          <div className="w-24 h-24 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6 shadow-orange-200 dark:shadow-orange-900/20 shadow-xl animate-bounce-slow">
-            <Beef className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+    <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Left: Form */}
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        {/* Mobile header */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+            <Beef className="h-4 w-4 text-orange-600 dark:text-orange-400" />
           </div>
-          <h1 className="text-6xl font-black text-orange-600 dark:text-orange-400 mb-3 tracking-tight">
-            Carnita Asada
-          </h1>
-          <p className="text-xl text-zinc-600 dark:text-zinc-400 font-medium">
-            Sin tanta complicación
-          </p>
+          <span className="text-lg font-bold text-orange-600 dark:text-orange-400">Carnita Asada</span>
         </div>
 
-        <Card className="w-full max-w-md shadow-2xl shadow-orange-200/50 dark:shadow-zinc-950/50 border-orange-100 dark:border-zinc-800 border-2">
-          <CardHeader className="p-8 pb-6 space-y-3">
-            <CardTitle className="text-3xl font-bold tracking-tight">Crear nuevo evento</CardTitle>
-            <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
-              Ingresa los datos de tu carnita asada para comenzar
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-8 pt-0">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-md space-y-8">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Crear nuevo evento
+              </h1>
+              <p className="text-zinc-500 dark:text-zinc-400">
+                Ingresa los datos de tu carnita asada para comenzar
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="title" className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-medium">
                   Nombre del evento
                 </Label>
                 <Input
@@ -95,8 +94,8 @@ export default function Home() {
                 />
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
                   Fecha y hora
                 </Label>
                 <DateTimePicker
@@ -108,8 +107,8 @@ export default function Home() {
                 />
               </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="location" className="flex items-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              <div className="space-y-2">
+                <Label htmlFor="location" className="flex items-center gap-1 text-sm font-medium">
                   <MapPin className="h-4 w-4 text-orange-500" />
                   Ubicación <span className="text-zinc-400 text-xs font-normal">(opcional)</span>
                 </Label>
@@ -124,17 +123,34 @@ export default function Home() {
 
               <Button
                 type="submit"
-                variant="outline"
-                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 py-6 text-lg font-black text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 shadow-lg shadow-orange-100/50 dark:shadow-none transition-all active:scale-[0.98]"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-lg font-bold shadow-lg transition-all active:scale-[0.98]"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando...' : 'Crear Carnita Asada'}
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </div>
 
-      </main>
+      {/* Right: Branding */}
+      <div className="hidden lg:flex flex-col items-center justify-center bg-gradient-to-b from-orange-50 to-amber-100 dark:from-zinc-900 dark:to-zinc-800 relative overflow-hidden">
+        {/* Decorative circles */}
+        <div className="absolute top-20 right-20 w-64 h-64 bg-orange-200/30 dark:bg-orange-900/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-48 h-48 bg-amber-200/40 dark:bg-amber-900/20 rounded-full blur-2xl" />
+
+        <div className="relative z-10 text-center">
+          <div className="w-32 h-32 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-8 mx-auto shadow-xl shadow-orange-200/50 dark:shadow-orange-900/20 animate-bounce-slow">
+            <Beef className="h-16 w-16 text-orange-600 dark:text-orange-400" />
+          </div>
+          <h2 className="text-6xl font-black text-orange-600 dark:text-orange-400 mb-4 tracking-tight">
+            Carnita Asada
+          </h2>
+          <p className="text-xl text-zinc-600 dark:text-zinc-400 font-medium">
+            Sin tanta complicación
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
