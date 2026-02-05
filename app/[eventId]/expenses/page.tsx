@@ -219,7 +219,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button variant="outline" className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all">
               + Agregar
             </Button>
           </DialogTrigger>
@@ -284,8 +284,9 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
               <Button
                 type="submit"
+                variant="outline"
                 disabled={isSubmitting}
-                className="w-full bg-orange-600 hover:bg-orange-700"
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all py-6"
               >
                 {isSubmitting ? 'Guardando...' : 'Guardar gasto'}
               </Button>
@@ -436,7 +437,12 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
             <Button variant="outline" onClick={() => setEditingExpense(null)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isEditSaving} className="bg-orange-600 hover:bg-orange-700">
+            <Button
+              variant="outline"
+              onClick={handleSaveEdit}
+              disabled={isEditSaving}
+              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+            >
               {isEditSaving ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>

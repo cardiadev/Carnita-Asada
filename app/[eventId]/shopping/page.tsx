@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { Pencil, Trash2, Check } from 'lucide-react'
+import { Pencil, Trash2, Check, Lightbulb } from 'lucide-react'
 import { TemplateSelector } from '@/components/shopping/template-selector'
 import type { ShoppingItem, Category, SuggestedItem } from '@/types/database'
 
@@ -254,7 +254,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm">
-                💡 Sugerencias
+                <Lightbulb className="h-4 w-4 mr-2" />
+                Sugerencias
               </Button>
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
@@ -350,8 +351,9 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
             </div>
             <Button
               type="submit"
+              variant="outline"
               disabled={isAdding}
-              className="w-full bg-orange-600 hover:bg-orange-700"
+              className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
             >
               {isAdding ? 'Agregando...' : 'Agregar Item'}
             </Button>
@@ -548,7 +550,12 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
             <Button variant="outline" onClick={() => setEditingItem(null)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isEditSaving} className="bg-orange-600 hover:bg-orange-700">
+            <Button
+              variant="outline"
+              onClick={handleSaveEdit}
+              disabled={isEditSaving}
+              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all font-bold"
+            >
               {isEditSaving ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>

@@ -326,8 +326,9 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
               </Button>
               <Button
                 type="submit"
+                variant="outline"
                 disabled={isAdding}
-                className="flex-1 bg-orange-600 hover:bg-orange-700"
+                className="flex-1 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
               >
                 <Check className="h-4 w-4 mr-2" />
                 {isAdding ? 'Agregando...' : `Guardar (${newNames.filter(n => n.trim()).length})`}
@@ -471,7 +472,12 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
             <Button variant="outline" onClick={() => setEditingAttendee(null)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isEditing} className="bg-orange-600 hover:bg-orange-700">
+            <Button
+              variant="outline"
+              onClick={handleSaveEdit}
+              disabled={isEditing}
+              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+            >
               {isEditing ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>
@@ -531,7 +537,12 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
             <Button variant="outline" onClick={() => setBankDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveBankInfo} disabled={isSavingBank} className="bg-orange-600 hover:bg-orange-700">
+            <Button
+              variant="outline"
+              onClick={handleSaveBankInfo}
+              disabled={isSavingBank}
+              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+            >
               {isSavingBank ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>

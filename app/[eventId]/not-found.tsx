@@ -12,7 +12,7 @@ export default function NotFound() {
         El evento que buscas no existe o el enlace es incorrecto.
       </p>
       <Link href="/" className="mt-6">
-        <Button className="bg-orange-600 hover:bg-orange-700">
+        <Button variant="outline" className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all">
           Crear nuevo evento
         </Button>
       </Link>

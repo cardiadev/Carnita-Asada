@@ -592,7 +592,8 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                             </Button>
                             <Button
                               size="sm"
-                              className="flex-1 bg-green-600 hover:bg-green-700"
+                              variant="outline"
+                              className="flex-1 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 font-bold text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-all"
                               onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, amount)}
                               disabled={isSaving}
                             >

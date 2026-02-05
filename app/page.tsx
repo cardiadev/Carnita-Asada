@@ -60,7 +60,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-100 dark:from-zinc-900 dark:to-zinc-800">
-      <main className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-screen">
+      <main className="container mx-auto px-4 pt-16 pb-24 flex flex-col items-center justify-center min-h-screen">
         <div className="text-center mb-10 flex flex-col items-center">
           <div className="w-24 h-24 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6 shadow-orange-200 dark:shadow-orange-900/20 shadow-xl animate-bounce-slow">
             <Beef className="h-12 w-12 text-orange-600 dark:text-orange-400" />
@@ -69,7 +69,7 @@ export default function Home() {
             Carnita Asada
           </h1>
           <p className="text-xl text-zinc-600 dark:text-zinc-400 font-medium">
-            Organiza tu parrillada sin tanta complicación
+            Sin tanta complicación
           </p>
         </div>
 
@@ -124,7 +124,8 @@ export default function Home() {
 
               <Button
                 type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700 py-6 text-base font-bold shadow-lg shadow-orange-200 dark:shadow-none transition-all active:scale-[0.98]"
+                variant="outline"
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 py-6 text-lg font-black text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 shadow-lg shadow-orange-100/50 dark:shadow-none transition-all active:scale-[0.98]"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creando...' : 'Crear Carnita Asada'}
@@ -133,27 +134,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <footer className="mt-16 text-center text-sm text-zinc-500 dark:text-zinc-400 flex flex-col items-center gap-1">
-          <p className="flex items-center gap-1.5 font-medium italic">
-            Creado con amor <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse" /> por{' '}
-            <a
-              href="https://carlosdiaz.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-orange-600 dark:text-orange-400 hover:underline font-bold not-italic"
-            >
-              Carlos Díaz
-            </a>
-          </p>
-          <a
-            href="https://github.com/cardiadev"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-400 hover:text-orange-600 transition-colors"
-          >
-            @cardiadev
-          </a>
-        </footer>
       </main>
     </div>
   )

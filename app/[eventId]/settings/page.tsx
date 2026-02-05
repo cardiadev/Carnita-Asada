@@ -219,7 +219,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full bg-orange-600 hover:bg-orange-700"
+                variant="outline"
+                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all py-6"
                 size="lg"
             >
                 <Save className="h-4 w-4 mr-2" />

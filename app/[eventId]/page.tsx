@@ -111,7 +111,7 @@ export default async function EventPage({ params }: EventPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 pt-4 pb-2 max-w-2xl">
+    <div className="container mx-auto px-4 pt-6 pb-20 max-w-2xl">
       {/* Countdown with Title & Attendees */}
       <div className="mb-4">
         <Countdown
@@ -244,7 +244,11 @@ export default async function EventPage({ params }: EventPageProps) {
                 </div>
               </div>
             ))}
-            <Button asChild className="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all hover:scale-[1.01]" variant="default">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full mt-4 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all h-11"
+            >
               <Link href={`/${eventId}/summary`}>
                 Ver pagos y transferencias
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -273,16 +277,16 @@ export default async function EventPage({ params }: EventPageProps) {
       {balances.length === 0 && (
         <Card className="mb-4 border-zinc-200 dark:border-zinc-700">
           <CardContent className="py-6 text-center text-zinc-500 dark:text-zinc-400">
-            <p>Agrega asistentes y registra gastos para ver el estado de pagos</p>
-            <div className="flex justify-center gap-4 mt-4">
-              <Button asChild variant="outline">
-                <Link href={`/${eventId}/attendees`}>
-                  Agregar asistentes
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
+            <p className="text-zinc-600 dark:text-zinc-400 mb-6 px-4">Agrega asistentes y registra gastos para comenzar</p>
+            <div className="flex flex-row justify-center gap-3 px-4">
+              <Button asChild variant="outline" className="flex-1 max-w-[160px] h-11 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all">
                 <Link href={`/${eventId}/expenses`}>
                   Registrar gastos
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="flex-1 max-w-[160px] h-11 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all">
+                <Link href={`/${eventId}/attendees`}>
+                  Agregar asistentes
                 </Link>
               </Button>
             </div>
@@ -305,7 +309,7 @@ export default async function EventPage({ params }: EventPageProps) {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 space-y-4">
+        <CardContent className="p-6 space-y-6">
           {/* Meat Cuts */}
           <div>
             <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
@@ -344,28 +348,6 @@ export default async function EventPage({ params }: EventPageProps) {
           </div>
         </CardContent>
       </Card>
-      {/* Footer */}
-      <footer className="mt-12 mb-8 text-center text-sm text-zinc-500 dark:text-zinc-400 flex flex-col items-center gap-1">
-        <p className="flex items-center gap-1.5 font-medium italic">
-          Creado con amor <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse" /> por{' '}
-          <a
-            href="https://carlosdiaz.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-orange-600 dark:text-orange-400 hover:underline font-bold not-italic"
-          >
-            Carlos Díaz
-          </a>
-        </p>
-        <a
-          href="https://github.com/cardiadev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-zinc-400 hover:text-orange-600 transition-colors"
-        >
-          @cardiadev
-        </a>
-      </footer>
     </div>
   )
 }

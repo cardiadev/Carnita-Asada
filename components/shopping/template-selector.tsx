@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { shoppingTemplates, ShoppingTemplate, ShoppingTemplateItem } from '@/lib/data/shopping-templates'
 import { toast } from 'sonner'
+import { ClipboardList } from 'lucide-react'
 
 interface TemplateSelectorProps {
     eventUuid: string | null
@@ -108,7 +109,8 @@ export function TemplateSelector({ eventUuid, onItemsAdded, categories }: Templa
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                    📋 Usar plantilla
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Usar plantilla
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">

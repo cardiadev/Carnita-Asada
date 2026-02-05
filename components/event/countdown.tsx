@@ -75,7 +75,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
           <EventHeader />
           <div className="text-center">
             <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              🍖 ¡La carnita asada ya pasó!
+              🍖 ¡La carnita asada ya pasó! 🍖
             </p>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
               Esperamos que la hayan pasado increíble
