@@ -114,12 +114,14 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
     setIsAdding(true)
 
     try {
+      const categoryId = values.categoryId === 'none' ? undefined : values.categoryId
+
       const res = await fetch('/api/shopping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: eventUuid,
-          categoryId: values.categoryId || undefined,
+          categoryId: categoryId,
           name: values.name.trim(),
           quantity: parseFloat(values.quantity) || 1,
           unit: values.unit,
@@ -137,7 +139,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
         name: '',
         quantity: '1',
         unit: 'piezas',
-        categoryId: '',
+        categoryId: 'none',
       })
       toast.success('Item agregado')
     } catch (error) {
@@ -211,7 +213,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
       name: item.name,
       quantity: String(item.quantity),
       unit: item.unit,
-      categoryId: item.category_id || '',
+      categoryId: item.category_id || 'none',
     })
   }
 
@@ -220,6 +222,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
     setIsEditSaving(true)
     try {
+      const categoryId = values.categoryId === 'none' ? null : values.categoryId
+
       const res = await fetch(`/api/shopping/${editingItem.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -227,14 +231,24 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
           name: values.name.trim(),
           quantity: parseFloat(values.quantity) || 1,
           unit: values.unit,
+          categoryId: categoryId,
         }),
       })
 
       if (!res.ok) throw new Error()
 
+      const newCategory = categories.find(c => c.id === categoryId) || null
+
       setItems(items.map(i =>
         i.id === editingItem.id
-          ? { ...i, name: values.name.trim(), quantity: parseFloat(values.quantity) || 1, unit: values.unit }
+          ? {
+            ...i,
+            name: values.name.trim(),
+            quantity: parseFloat(values.quantity) || 1,
+            unit: values.unit,
+            category_id: categoryId ?? null,
+            category: newCategory
+          }
           : i
       ))
       setEditingItem(null)
@@ -584,23 +598,28 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre</FormLabel>
                       <FormControl>
-                        <Input disabled={isEditSaving} {...field} />
+                        <Input placeholder="Nombre" disabled={isEditSaving} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-4 gap-3">
                   <FormField
                     control={editForm.control}
                     name="quantity"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cantidad</FormLabel>
+                      <FormItem className="col-span-1">
                         <FormControl>
-                          <Input type="number" disabled={isEditSaving} {...field} />
+                          <Input
+                            type="number"
+                            disabled={isEditSaving}
+                            step="0.1"
+                            placeholder="Cant."
+                            className="w-full"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -610,12 +629,11 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                     control={editForm.control}
                     name="unit"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unidad</FormLabel>
+                      <FormItem className="col-span-1">
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger disabled={isEditSaving}>
-                              <SelectValue />
+                            <SelectTrigger disabled={isEditSaving} className="w-full">
+                              <SelectValue placeholder="Unidad" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -627,6 +645,30 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                             <SelectItem value="bolsas">bolsas</SelectItem>
                             <SelectItem value="manojos">manojos</SelectItem>
                             <SelectItem value="six">six</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger disabled={isEditSaving} className="w-full">
+                              <SelectValue placeholder="Categoría" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">Sin categoría</SelectItem>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />

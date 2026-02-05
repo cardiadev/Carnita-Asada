@@ -61,7 +61,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Guía de Cortes y Cantidades</h2>
                     </div>
 
-                    <Card className="border-zinc-200 dark:border-zinc-700 shadow-sm border-t-4 border-t-orange-500">
+                    <Card className="border-zinc-200 dark:border-zinc-700 shadow-sm">
                         <CardHeader className="p-6 pb-4 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                             <CardTitle className="text-lg flex items-center gap-2 font-semibold">
                                 <Calculator className="h-5 w-5 text-orange-500" />
