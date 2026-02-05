@@ -45,7 +45,7 @@ const MEAT_SUGGESTIONS = [
 
 const RECOMMENDED_ITEMS = [
   'Carbón (1kg por cada 4 personas)',
-  'Tortillas (1/2 kg por persona)',
+  'Tortillas (100g por persona)',
   'Limones (2 por persona)',
   'Salsa y guacamole',
   'Cebollas y chiles para asar',
@@ -111,9 +111,9 @@ export default async function EventPage({ params }: EventPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-2xl">
+    <div className="container mx-auto px-4 pt-4 pb-2 max-w-2xl">
       {/* Countdown with Title & Attendees */}
-      <div className="mb-6">
+      <div className="mb-4">
         <Countdown
           targetDate={event.event_date}
           title={event.title}
@@ -129,14 +129,14 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Announcements / Description */}
       {event.description && (
-        <Card className="mb-6 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
-          <CardHeader className="pb-2">
+        <Card className="mb-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
+          <CardHeader className="p-3 pb-1">
             <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
               <Megaphone className="h-5 w-5" />
               Avisos
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-3">
             <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line">
               {event.description}
             </p>
@@ -145,13 +145,13 @@ export default async function EventPage({ params }: EventPageProps) {
       )}
 
       {/* Stats - More Visual */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm">
-          <CardContent className="py-5">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 mb-1">
-                <DollarSign className="h-4 w-4" />
-                <p className="text-xs font-medium tracking-wide">Gastado</p>
+          <CardContent className="p-4">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
+                <DollarSign className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                <p className="text-base font-semibold tracking-wide">Gastado</p>
               </div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(totalExpenses)}
@@ -161,11 +161,11 @@ export default async function EventPage({ params }: EventPageProps) {
         </Card>
 
         <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-sm">
-          <CardContent className="py-5">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
-                <Users className="h-4 w-4" />
-                <p className="text-xs font-medium tracking-wide">Toca por persona</p>
+          <CardContent className="p-4">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
+                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <p className="text-base font-semibold tracking-wide">Toca por persona</p>
               </div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(perPerson)}
@@ -182,8 +182,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Payment Progress */}
       {balances.length > 0 && (
-        <Card className="mb-6 border-zinc-200 dark:border-zinc-700">
-          <CardHeader className="pb-2">
+        <Card className="mb-4 border-zinc-200 dark:border-zinc-700">
+          <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base flex items-center justify-between font-semibold text-zinc-700 dark:text-zinc-300">
               <div className="flex items-center gap-2">
                 <PieChart className="h-5 w-5 text-blue-500" />
@@ -194,7 +194,7 @@ export default async function EventPage({ params }: EventPageProps) {
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4">
             <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 rounded-full transition-all duration-500"
@@ -207,14 +207,14 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Pending Payments */}
       {pendingPayments.length > 0 && (
-        <Card className="mb-6 border-zinc-200 dark:border-zinc-700">
-          <CardHeader className="pb-3">
+        <Card className="mb-4 border-zinc-200 dark:border-zinc-700">
+          <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base flex items-center gap-2 font-semibold text-zinc-700 dark:text-zinc-300">
               <Users className="h-5 w-5 text-red-500" />
               ¿Quién falta por pagar?
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="px-4 pb-4 space-y-3">
             {pendingPayments.map((person) => (
               <div
                 key={person.attendeeId}
@@ -256,8 +256,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* All Caught Up */}
       {pendingPayments.length === 0 && balances.length > 0 && (
-        <Card className="mb-6 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
-          <CardContent className="py-6 text-center">
+        <Card className="mb-4 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+          <CardContent className="py-4 text-center">
             <div className="text-4xl mb-2">🎉</div>
             <h3 className="font-bold text-green-700 dark:text-green-400">
               ¡Todos al día!
@@ -271,8 +271,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Empty State */}
       {balances.length === 0 && (
-        <Card className="mb-6 border-zinc-200 dark:border-zinc-700">
-          <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+        <Card className="mb-4 border-zinc-200 dark:border-zinc-700">
+          <CardContent className="py-6 text-center text-zinc-500 dark:text-zinc-400">
             <p>Agrega asistentes y registra gastos para ver el estado de pagos</p>
             <div className="flex justify-center gap-4 mt-4">
               <Button asChild variant="outline">
@@ -291,8 +291,8 @@ export default async function EventPage({ params }: EventPageProps) {
       )}
 
       {/* Suggestions Section */}
-      <Card className="mb-6 border-zinc-200 dark:border-zinc-700 overflow-hidden">
-        <CardHeader className="pb-3 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
+      <Card className="border-zinc-200 dark:border-zinc-700 overflow-hidden">
+        <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
           <CardTitle className="text-base flex items-center justify-between font-semibold text-zinc-700 dark:text-zinc-300">
             <div className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-yellow-500" />
@@ -305,23 +305,23 @@ export default async function EventPage({ params }: EventPageProps) {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-6 space-y-6">
+        <CardContent className="p-4 space-y-4">
           {/* Meat Cuts */}
           <div>
             <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
               <Beef className="h-4 w-4 text-red-500" />
               Cortes de carne (cantidad por persona)
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {MEAT_SUGGESTIONS.map((meat) => (
                 <div
                   key={meat.name}
-                  className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl text-sm border border-zinc-100 dark:border-zinc-800 shadow-sm transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="flex flex-col items-center gap-1 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg text-sm border border-zinc-100 dark:border-zinc-800 shadow-sm transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800 text-center"
                 >
-                  <span className="text-2xl">{meat.icon}</span>
+                  <span className="text-xl">{meat.icon}</span>
                   <div>
-                    <p className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight">{meat.name}</p>
-                    <p className="text-[11px] text-zinc-500 leading-tight mt-1">{meat.quantity}</p>
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight text-[11px] sm:text-xs">{meat.name}</p>
+                    <p className="text-[10px] text-zinc-500 leading-tight mt-0.5">{meat.quantity}</p>
                   </div>
                 </div>
               ))}
@@ -330,10 +330,10 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Recommended Items */}
           <div>
-            <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2 flex items-center gap-2">
               📋 No olvides
             </h4>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
               {RECOMMENDED_ITEMS.map((item, index) => (
                 <li key={index} className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useCountdown } from '@/hooks/use-countdown'
 import { formatDateTime, formatDateOnly, formatTimeOnly } from '@/lib/utils/date'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,6 +18,11 @@ interface CountdownProps {
 
 export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl, cancelled }: CountdownProps) {
   const { days, hours, minutes, seconds, isExpired } = useCountdown(targetDate)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const targetDateObj = typeof targetDate === 'string' ? new Date(targetDate) : targetDate
   const now = new Date()
@@ -108,10 +114,10 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
       <CardContent className="py-6">
         <EventHeader />
         <div className="flex justify-center gap-4 md:gap-8">
-          <TimeUnit value={days} label="días" />
-          <TimeUnit value={hours} label="hrs" />
-          <TimeUnit value={minutes} label="min" />
-          <TimeUnit value={seconds} label="seg" />
+          <TimeUnit value={mounted ? days : 0} label="días" />
+          <TimeUnit value={mounted ? hours : 0} label="hrs" />
+          <TimeUnit value={mounted ? minutes : 0} label="min" />
+          <TimeUnit value={mounted ? seconds : 0} label="seg" />
         </div>
         <div className="text-center mt-4 space-y-1">
           <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 capitalize">
