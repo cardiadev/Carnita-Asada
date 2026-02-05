@@ -498,7 +498,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                         <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
                           {item.name}
                         </span>
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-sm">
                           {item.quantity} {item.unit}
                         </Badge>
                       </div>
@@ -553,7 +553,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                       <span className={item.is_purchased ? 'line-through text-zinc-400' : ''}>
                         {item.name}
                       </span>
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-sm">
                         {item.quantity} {item.unit}
                       </Badge>
                     </div>

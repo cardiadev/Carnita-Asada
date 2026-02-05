@@ -386,12 +386,12 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                         {attendee.name}
                       </p>
                       {attendee.exclude_from_split ? (
-                        <Badge variant="secondary" className="text-xs bg-zinc-200 dark:bg-zinc-700">
+                        <Badge variant="secondary" className="text-sm bg-zinc-200 dark:bg-zinc-700">
                           <UserMinus className="h-3 w-3 mr-1" />
                           Excluido
                         </Badge>
                       ) : (
-                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <Badge className="text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           <Check className="h-3 w-3 mr-1" />
                           Incluido en gastos
                         </Badge>

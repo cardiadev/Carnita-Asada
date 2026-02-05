@@ -152,7 +152,7 @@ function TimeUnit({ value, label }: { value: number; label: string }) {
       <span className="text-3xl md:text-5xl font-bold text-orange-600 dark:text-orange-400 tabular-nums">
         {value.toString().padStart(2, '0')}
       </span>
-      <span className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400">
+      <span className="text-sm text-zinc-500 dark:text-zinc-400">
         {label}
       </span>
     </div>

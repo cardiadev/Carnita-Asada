@@ -154,7 +154,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 {formatCurrency(perPerson)}
               </p>
               {activeCount !== attendeesCount && (
-                <p className="text-xs text-zinc-500 mt-1 font-medium">
+                <p className="text-sm text-zinc-500 mt-1 font-medium">
                   Entre {activeCount}
                 </p>
               )}
@@ -302,7 +302,7 @@ export default async function EventPage({ params }: EventPageProps) {
               <Lightbulb className="h-5 w-5 text-yellow-500" />
               Sugerencias para tu Carnita Asada
             </div>
-            <Button variant="ghost" size="sm" asChild className="text-xs font-normal hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-950/30">
+            <Button variant="ghost" size="sm" asChild className="text-sm font-normal hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-950/30">
               <Link href={`/${eventId}/suggestions`}>
                 Ver más <ArrowRight className="h-3 w-3 ml-1" />
               </Link>
@@ -324,8 +324,8 @@ export default async function EventPage({ params }: EventPageProps) {
                 >
                   <span className="text-xl">{meat.icon}</span>
                   <div>
-                    <p className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight text-[11px] sm:text-xs">{meat.name}</p>
-                    <p className="text-[10px] text-zinc-500 leading-tight mt-0.5">{meat.quantity}</p>
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight text-sm">{meat.name}</p>
+                    <p className="text-sm text-zinc-500 leading-tight mt-0.5">{meat.quantity}</p>
                   </div>
                 </div>
               ))}

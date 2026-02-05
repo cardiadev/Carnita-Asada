@@ -229,7 +229,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
             .attr('transform', `translate(0, ${height})`)
             .call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d}`).tickSize(-height))
             .selectAll('text')
-            .attr('font-size', '12px')
+            .attr('font-size', '14px')
             .attr('dy', '15px')
             .attr('class', 'fill-zinc-400')
 
@@ -291,7 +291,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
         g.append('text')
             .attr('text-anchor', 'middle')
             .attr('dy', '1.2em')
-            .attr('font-size', '12px')
+            .attr('font-size', '14px')
             .attr('fill', '#71717a')
             .text('al día')
 
@@ -419,7 +419,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                                                 }`}
                                         >
                                             <p className="font-medium text-sm truncate">{person.name}</p>
-                                            <p className={`text-xs mt-1 ${person.status === 'pagado'
+                                            <p className={`text-sm mt-1 ${person.status === 'pagado'
                                                 ? 'text-green-600 dark:text-green-400'
                                                 : 'text-red-600 dark:text-red-400'
                                                 }`}>

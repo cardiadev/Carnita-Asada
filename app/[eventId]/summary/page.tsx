@@ -312,7 +312,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 mb-1">
                 <DollarSign className="h-4 w-4" />
-                <p className="text-xs font-medium tracking-wide">Gastado</p>
+                <p className="text-sm font-medium tracking-wide">Gastado</p>
               </div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(totalExpenses)}
@@ -326,7 +326,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
                 <Users className="h-4 w-4" />
-                <p className="text-xs font-medium tracking-wide">Toca por persona</p>
+                <p className="text-sm font-medium tracking-wide">Toca por persona</p>
               </div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(perPerson)}
@@ -362,7 +362,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                         <p className="font-medium text-zinc-900 dark:text-zinc-100">
                           {b.attendee.name}
                         </p>
-                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
+                        <Badge className="text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
                           <UserCheck className="h-3 w-3 mr-1" />
                           Incluido en gastos
                         </Badge>
@@ -395,7 +395,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                       title="Excluir de los gastos"
                     >
                       <UserMinus className="h-4 w-4 mr-1.5" />
-                      <span className="text-xs">Excluir</span>
+                      <span className="text-sm">Excluir</span>
                     </Button>
                   </div>
                 </div>
@@ -424,7 +424,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                   className="flex items-center justify-between p-3 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-medium text-xs">
+                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-medium text-sm">
                       {a.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-zinc-700 dark:text-zinc-300">
@@ -434,7 +434,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs gap-1.5 hover:bg-green-50 hover:text-green-600 hover:border-green-200 dark:hover:bg-green-900/20"
+                    className="h-8 text-sm gap-1.5 hover:bg-green-50 hover:text-green-600 hover:border-green-200 dark:hover:bg-green-900/20"
                     onClick={() => handleToggleExclusion(a)}
                   >
                     <UserPlus className="h-3.5 w-3.5" />
@@ -464,7 +464,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                     <p className="font-medium text-zinc-900 dark:text-zinc-100">
                       {debtor.attendee.name}
                     </p>
-                    <p className="text-xs text-red-600 dark:text-red-400">
+                    <p className="text-sm text-red-600 dark:text-red-400">
                       Debe: {formatCurrency(Math.abs(debtor.balance))}
                     </p>
                   </div>
@@ -623,7 +623,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                       </div>
 
                       {!creditor.bankInfo && !isPaid && (
-                        <p className="text-xs text-zinc-500 mt-2">
+                        <p className="text-sm text-zinc-500 mt-2">
                           💡 {creditor.attendee.name} puede agregar sus datos bancarios en Asistentes
                         </p>
                       )}

@@ -25,7 +25,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <Card className="bg-orange-50/50 dark:bg-orange-950/10 border-orange-100 dark:border-orange-900/30">
-                    <CardContent className="pt-6">
+                    <CardContent className="p-6">
                         <div className="flex flex-col items-center text-center">
                             <Beef className="h-8 w-8 text-orange-600 mb-3" />
                             <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Cortes Selectos</h3>
@@ -34,7 +34,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                     </CardContent>
                 </Card>
                 <Card className="bg-red-50/50 dark:bg-red-950/10 border-red-100 dark:border-red-900/30">
-                    <CardContent className="pt-6">
+                    <CardContent className="p-6">
                         <div className="flex flex-col items-center text-center">
                             <FlameKindling className="h-8 w-8 text-red-600 mb-3" />
                             <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Fuego Perfecto</h3>
@@ -43,7 +43,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                     </CardContent>
                 </Card>
                 <Card className="bg-green-50/50 dark:bg-green-950/10 border-green-100 dark:border-green-900/30">
-                    <CardContent className="pt-6">
+                    <CardContent className="p-6">
                         <div className="flex flex-col items-center text-center">
                             <ChefHat className="h-8 w-8 text-green-600 mb-3" />
                             <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Sazón Único</h3>
@@ -68,7 +68,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                                 Cálculo por Persona
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-8 pt-10 space-y-4">
+                        <CardContent className="p-8 space-y-4">
                             <div className="flex justify-between items-center p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl">
                                 <span className="font-bold text-zinc-700 dark:text-zinc-300">Solo Carne Roja</span>
                                 <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">350g - 400g</Badge>
@@ -81,7 +81,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                                 <span className="font-bold text-zinc-700 dark:text-zinc-300">Niños</span>
                                 <Badge variant="outline" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 font-bold px-3 py-1 text-sm">150g - 200g</Badge>
                             </div>
-                            <p className="text-xs text-zinc-500 font-medium italic mt-4 text-center">
+                            <p className="text-sm text-zinc-500 font-medium italic mt-4 text-center">
                                 * Las cantidades consideran el peso en crudo.
                             </p>
                         </CardContent>
@@ -100,7 +100,7 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                                 <div key={item.name} className="flex flex-col p-4 border border-zinc-100 dark:border-zinc-800 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors shadow-sm">
                                     <div className="flex justify-between items-start mb-2">
                                         <span className="font-bold text-zinc-900 dark:text-zinc-100">{item.name}</span>
-                                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold text-orange-600 border-orange-200">{item.rating}</Badge>
+                                        <Badge variant="outline" className="text-xs uppercase tracking-wider font-bold text-orange-600 border-orange-200">{item.rating}</Badge>
                                     </div>
                                     <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
                                 </div>
@@ -131,8 +131,8 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
 
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 gap-4">
-                            <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm">
-                                <h4 className="font-bold flex items-center gap-2 mb-2">
+                            <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm">
+                                <h4 className="font-bold flex items-center gap-2 mb-2 text-base">
                                     <Flame className="h-4 w-4 text-orange-500" />
                                     Control de Temperatura
                                 </h4>
@@ -141,12 +141,12 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm">
-                                <h4 className="font-bold flex items-center gap-2 mb-2 text-green-700 dark:text-green-400">
+                            <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm">
+                                <h4 className="font-bold flex items-center gap-2 mb-2 text-base text-green-700 dark:text-green-400">
                                     <Droplets className="h-4 w-4" />
                                     Salsa Verde
                                 </h4>
-                                <ul className="text-xs space-y-1 text-zinc-500">
+                                <ul className="text-sm space-y-1 text-zinc-500">
                                     <li>• 500g Tomatillo asado</li>
                                     <li>• 3 Chiles serranos asados</li>
                                     <li>• 1 diente de Ajo</li>
@@ -155,14 +155,14 @@ export default function SuggestionsPage({ params }: SuggestionsPageProps) {
                                 </ul>
                             </div>
 
-                            <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm">
-                                <h4 className="font-bold flex items-center gap-2 mb-2">
+                            <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm">
+                                <h4 className="font-bold flex items-center gap-2 mb-2 text-base">
                                     <Utensils className="h-4 w-4 text-zinc-400" />
                                     Guarniciones Indispensables
                                 </h4>
                                 <div className="flex flex-wrap gap-2 pt-1">
                                     {['Quesadillas', 'Cebollitas', 'Nopales', 'Chiles Toreados', 'Frijoles Charros'].map(tag => (
-                                        <Badge key={tag} variant="secondary" className="font-normal text-[11px]">{tag}</Badge>
+                                        <Badge key={tag} variant="secondary" className="font-normal text-sm">{tag}</Badge>
                                     ))}
                                 </div>
                             </div>
