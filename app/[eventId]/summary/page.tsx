@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { Copy, Check, MessageCircle, CheckCircle2, Undo2, UserCheck, UserX, DollarSign, Users } from 'lucide-react'
+import { Copy, Check, MessageCircle, CheckCircle2, Undo2, UserCheck, UserX, DollarSign, Users, UserPlus, UserMinus } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { Expense, Attendee } from '@/types/database'
 
@@ -224,6 +224,35 @@ export default function SummaryPage({ params }: SummaryPageProps) {
     }
   }
 
+  // Toggle exclusion from summary
+  const handleToggleExclusion = async (attendee: Attendee) => {
+    try {
+      const res = await fetch(`/api/attendees/${attendee.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          excludeFromSplit: !attendee.exclude_from_split,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Error al actualizar')
+
+      setAttendees(attendees.map(a =>
+        a.id === attendee.id
+          ? { ...a, exclude_from_split: !a.exclude_from_split }
+          : a
+      ))
+
+      toast.success(
+        attendee.exclude_from_split
+          ? 'Incluido en gastos'
+          : 'Excluido de los gastos'
+      )
+    } catch {
+      toast.error('Error al actualizar asistente')
+    }
+  }
+
   // Group transfers by debtor
   const getGroupedTransfers = () => {
     const debtors = balances.filter(b => b.balance < 0)
@@ -269,34 +298,30 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
       {/* Totales - Visual Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-orange-500 to-amber-500 text-white border-0 shadow-lg">
+        <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm">
           <CardContent className="py-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <DollarSign className="h-6 w-6" />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 mb-1">
+                <DollarSign className="h-4 w-4" />
+                <p className="text-xs font-medium tracking-wide">Gastado</p>
               </div>
-              <div>
-                <p className="text-sm text-white/80">Total gastado</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(totalExpenses)}
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {formatCurrency(totalExpenses)}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white border-0 shadow-lg">
+        <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-sm">
           <CardContent className="py-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Users className="h-6 w-6" />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
+                <Users className="h-4 w-4" />
+                <p className="text-xs font-medium tracking-wide">Toca por persona</p>
               </div>
-              <div>
-                <p className="text-sm text-white/80">Por persona</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(perPerson)}
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {formatCurrency(perPerson)}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -318,19 +343,19 @@ export default function SummaryPage({ params }: SummaryPageProps) {
           ) : (
             balances.map((b) => (
               <div key={b.attendee.id}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 font-medium">
                       {b.attendee.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <p className="font-medium text-zinc-900 dark:text-zinc-100">
                           {b.attendee.name}
                         </p>
-                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
                           <UserCheck className="h-3 w-3 mr-1" />
-                          Incluido
+                          Incluido en gastos
                         </Badge>
                       </div>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -339,18 +364,30 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    {b.balance > 0 ? (
-                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                        Le deben {formatCurrency(b.balance)}
-                      </Badge>
-                    ) : b.balance < 0 ? (
-                      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                        Debe {formatCurrency(Math.abs(b.balance))}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">A mano</Badge>
-                    )}
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="text-right">
+                      {b.balance > 0 ? (
+                        <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Le deben {formatCurrency(b.balance)}
+                        </Badge>
+                      ) : b.balance < 0 ? (
+                        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                          Debe {formatCurrency(Math.abs(b.balance))}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">A mano</Badge>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={() => handleToggleExclusion(b.attendee)}
+                      title="Excluir de los gastos"
+                    >
+                      <UserMinus className="h-4 w-4 mr-1.5" />
+                      <span className="text-xs">Excluir</span>
+                    </Button>
                   </div>
                 </div>
                 <Separator className="mt-4" />
@@ -360,25 +397,42 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         </CardContent>
       </Card>
 
-      {/* Personas excluidas */}
+      {/* Personas excluidas - Rediseñado como lista */}
       {attendees.filter(a => a.exclude_from_split).length > 0 && (
-        <Card className="mb-6 border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
-          <CardHeader>
+        <Card className="mb-6 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20">
+          <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
               <UserX className="h-5 w-5" />
-              Excluidos de la división
+              Excluidos de los gastos
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {attendees
-                .filter(a => a.exclude_from_split)
-                .map((a) => (
-                  <Badge key={a.id} variant="outline" className="text-zinc-500">
-                    {a.name}
-                  </Badge>
-                ))}
-            </div>
+          <CardContent className="space-y-2">
+            {attendees
+              .filter(a => a.exclude_from_split)
+              .map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between p-3 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-medium text-xs">
+                      {a.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                      {a.name}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 hover:bg-green-50 hover:text-green-600 hover:border-green-200 dark:hover:bg-green-900/20"
+                    onClick={() => handleToggleExclusion(a)}
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Incluir
+                  </Button>
+                </div>
+              ))}
           </CardContent>
         </Card>
       )}

@@ -343,13 +343,17 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                       <span>{formatShortDate(expense.created_at)}</span>
                     </div>
                     {expense.receipt_url && (
-                      <button
-                        onClick={() => setSelectedReceipt(expense.receipt_url!)}
-                        className="text-sm text-orange-600 hover:underline mt-1 inline-flex items-center gap-1"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                        Ver comprobante
-                      </button>
+                      <div className="mt-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setSelectedReceipt(expense.receipt_url!)}
+                          className="h-8 text-xs gap-1.5"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Ver comprobante
+                        </Button>
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">

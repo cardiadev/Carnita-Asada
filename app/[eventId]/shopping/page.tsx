@@ -266,19 +266,19 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
               </SheetHeader>
               <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-160px)] pr-2">
                 {categories.map((category, index) => (
-                  <div key={category.id}>
-                    {index > 0 && <Separator className="mb-4" />}
-                    <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100 mb-3">
+                  <div key={category.id} className="mb-8 last:mb-0">
+                    {index > 0 && <Separator className="mb-6" />}
+                    <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100 mb-4">
                       {category.name}
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                       {category.suggested_items?.map((suggestion) => (
                         <Button
                           key={suggestion.id}
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleAddSuggestion(suggestion)}
-                          className="text-sm hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+                          className="text-sm bg-zinc-50 dark:bg-zinc-800/50 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-800 border-zinc-200 dark:border-zinc-700 transition-all rounded-full px-4"
                         >
                           + {suggestion.name}
                         </Button>

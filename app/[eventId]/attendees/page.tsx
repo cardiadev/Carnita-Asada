@@ -192,8 +192,8 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
 
       toast.success(
         attendee.exclude_from_split
-          ? 'Incluido en la división'
-          : 'Excluido de la división'
+          ? 'Incluido en gastos'
+          : 'Excluido de los gastos'
       )
     } catch {
       toast.error('Error al actualizar asistente')
@@ -369,8 +369,8 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${attendee.exclude_from_split
-                        ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                        : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                      : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                       }`}>
                       {attendee.name.charAt(0).toUpperCase()}
                     </div>
@@ -386,7 +386,7 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                       ) : (
                         <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           <Check className="h-3 w-3 mr-1" />
-                          Incluido en división
+                          Incluido en gastos
                         </Badge>
                       )}
                     </div>
@@ -415,7 +415,7 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleToggleExclusion(attendee)}
-                      title={attendee.exclude_from_split ? 'Incluir en división' : 'Excluir de división'}
+                      title={attendee.exclude_from_split ? 'Incluir en gastos' : 'Excluir de gastos'}
                       className={attendee.exclude_from_split
                         ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
                         : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'

@@ -104,39 +104,35 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Stats - More Visual */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-orange-500 to-amber-500 text-white border-0 shadow-lg">
+        <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm">
           <CardContent className="py-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <DollarSign className="h-6 w-6" />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 mb-1">
+                <DollarSign className="h-4 w-4" />
+                <p className="text-xs font-medium tracking-wide">Gastado</p>
               </div>
-              <div>
-                <p className="text-sm text-white/80">Total gastado</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(totalExpenses)}
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {formatCurrency(totalExpenses)}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white border-0 shadow-lg">
+        <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-sm">
           <CardContent className="py-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Users className="h-6 w-6" />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
+                <Users className="h-4 w-4" />
+                <p className="text-xs font-medium tracking-wide">Toca por persona</p>
               </div>
-              <div>
-                <p className="text-sm text-white/80">Por persona</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(perPerson)}
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {formatCurrency(perPerson)}
+              </p>
+              {activeCount !== attendeesCount && (
+                <p className="text-xs text-zinc-500">
+                  Entre {activeCount} personas
                 </p>
-                {activeCount !== attendeesCount && (
-                  <p className="text-xs text-white/70">
-                    Entre {activeCount} personas
-                  </p>
-                )}
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>

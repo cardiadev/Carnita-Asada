@@ -26,7 +26,7 @@ export function Countdown({ targetDate, title, attendeesCount, location, cancell
   const EventHeader = () => (
     <div className="text-center mb-4">
       {title && (
-        <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+        <h2 className="text-3xl md:text-5xl font-extrabold text-zinc-900 dark:text-zinc-100 mb-3 tracking-tight">
           {title}
         </h2>
       )}
