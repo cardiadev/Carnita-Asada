@@ -296,7 +296,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
       {/* Total */}
       <Card className="mb-6 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
-        <CardContent className="py-4">
+        <CardContent className="p-4">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Total gastado</p>
           <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
             {formatCurrency(totalExpenses)}
@@ -309,7 +309,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="py-4">
+              <CardContent className="p-4">
                 <div className="h-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
               </CardContent>
             </Card>
@@ -317,7 +317,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
         </div>
       ) : expenses.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+          <CardContent className="p-8 text-center text-zinc-500 dark:text-zinc-400">
             <p>No hay gastos registrados</p>
             <p className="text-sm mt-1">Agrega los gastos de la carnita</p>
           </CardContent>
@@ -325,8 +325,8 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
       ) : (
         <div className="space-y-3">
           {expenses.map((expense) => (
-            <Card key={expense.id}>
-              <CardContent className="py-4">
+            <Card key={expense.id} className="overflow-hidden">
+              <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <p className="font-medium text-zinc-900 dark:text-zinc-100">

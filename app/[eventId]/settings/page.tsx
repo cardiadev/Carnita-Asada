@@ -101,7 +101,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
                         <Card key={i}>
-                            <CardContent className="py-4">
+                            <CardContent className="p-4">
                                 <div className="h-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                             </CardContent>
                         </Card>
@@ -123,8 +123,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             </div>
 
             {/* Información básica */}
-            <Card className="mb-6">
-                <CardHeader>
+            <Card className="mb-6 overflow-hidden">
+                <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                     <CardTitle className="text-lg flex items-center gap-2">
                         <FileText className="h-5 w-5 text-orange-500" />
                         Información del Evento
@@ -133,7 +133,7 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                         Datos principales de tu carnita asada
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-4 space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="title">Título del evento</Label>
                         <Input
@@ -191,14 +191,14 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             </Card>
 
             {/* Descripción y avisos */}
-            <Card className="mb-6">
-                <CardHeader>
+            <Card className="mb-6 overflow-hidden">
+                <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                     <CardTitle className="text-lg">Descripción y Avisos</CardTitle>
                     <CardDescription>
                         Agrega notas importantes para los asistentes
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4">
                     <div className="space-y-2">
                         <Label htmlFor="description">Descripción</Label>
                         <Textarea

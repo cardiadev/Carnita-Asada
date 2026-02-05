@@ -275,7 +275,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="py-4">
+              <CardContent className="p-4">
                 <div className="h-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
               </CardContent>
             </Card>
@@ -298,8 +298,8 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
       {/* Totales - Visual Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm">
-          <CardContent className="py-5">
+        <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm overflow-hidden">
+          <CardContent className="p-5">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 mb-1">
                 <DollarSign className="h-4 w-4" />
@@ -312,8 +312,8 @@ export default function SummaryPage({ params }: SummaryPageProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-sm">
-          <CardContent className="py-5">
+        <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30 shadow-sm overflow-hidden">
+          <CardContent className="p-5">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
                 <Users className="h-4 w-4" />
@@ -328,14 +328,14 @@ export default function SummaryPage({ params }: SummaryPageProps) {
       </div>
 
       {/* Balances por persona */}
-      <Card className="mb-6">
-        <CardHeader>
+      <Card className="mb-6 overflow-hidden">
+        <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-green-500" />
             Balance por persona
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-4 space-y-4">
           {balances.length === 0 ? (
             <p className="text-center text-zinc-500 dark:text-zinc-400 py-4">
               Agrega asistentes para ver la división
@@ -399,14 +399,14 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
       {/* Personas excluidas - Rediseñado como lista */}
       {attendees.filter(a => a.exclude_from_split).length > 0 && (
-        <Card className="mb-6 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20">
-          <CardHeader className="pb-3">
+        <Card className="mb-6 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 overflow-hidden">
+          <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
             <CardTitle className="text-base flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
               <UserX className="h-5 w-5" />
               Excluidos de los gastos
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="p-4 space-y-2">
             {attendees
               .filter(a => a.exclude_from_split)
               .map((a) => (
@@ -439,11 +439,11 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
       {/* Transferencias sugeridas - Agrupadas por deudor */}
       {balances.some(b => b.balance !== 0) && (
-        <Card className="mt-6">
-          <CardHeader>
+        <Card className="mt-6 overflow-hidden">
+          <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
             <CardTitle className="text-lg">Transferencias sugeridas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="p-4 space-y-6">
             {getGroupedTransfers().map(({ debtor, transfers }) => (
               <div key={debtor.attendee.id} className="space-y-3">
                 {/* Debtor Header */}

@@ -261,7 +261,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                 <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
                         <Card key={i}>
-                            <CardContent className="py-4">
+                            <CardContent className="p-4">
                                 <div className="h-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                             </CardContent>
                         </Card>
@@ -284,11 +284,11 @@ export default function ChartsPage({ params }: ChartsPageProps) {
 
             <div className="grid gap-6">
                 {/* Pie Chart */}
-                <Card>
-                    <CardHeader>
+                <Card className="overflow-hidden">
+                    <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                         <CardTitle>Distribución de gastos</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-4">
                         {expensesByPerson.length === 0 ? (
                             <p className="text-center text-zinc-500 py-8">No hay gastos registrados</p>
                         ) : (
@@ -311,11 +311,11 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                 </Card>
 
                 {/* Bar Chart */}
-                <Card>
-                    <CardHeader>
+                <Card className="overflow-hidden">
+                    <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                         <CardTitle>Gastos por persona</CardTitle>
                     </CardHeader>
-                    <CardContent className="overflow-x-auto">
+                    <CardContent className="p-4 overflow-x-auto">
                         {expensesByPerson.length === 0 ? (
                             <p className="text-center text-zinc-500 py-8">No hay gastos registrados</p>
                         ) : (
@@ -325,11 +325,11 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                 </Card>
 
                 {/* Payment Status */}
-                <Card>
-                    <CardHeader>
+                <Card className="overflow-hidden">
+                    <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                         <CardTitle>Estado de pagos</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-4">
                         {paymentStatus.length === 0 ? (
                             <p className="text-center text-zinc-500 py-8">No hay asistentes registrados</p>
                         ) : (
@@ -340,14 +340,14 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                                         <div
                                             key={person.name}
                                             className={`p-3 rounded-lg border ${person.status === 'pagado'
-                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                                                 }`}
                                         >
                                             <p className="font-medium text-sm truncate">{person.name}</p>
                                             <p className={`text-xs mt-1 ${person.status === 'pagado'
-                                                    ? 'text-green-600 dark:text-green-400'
-                                                    : 'text-red-600 dark:text-red-400'
+                                                ? 'text-green-600 dark:text-green-400'
+                                                : 'text-red-600 dark:text-red-400'
                                                 }`}>
                                                 {person.status === 'pagado'
                                                     ? `+$${person.balance.toFixed(2)}`
@@ -364,16 +364,16 @@ export default function ChartsPage({ params }: ChartsPageProps) {
 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-2 gap-4">
-                    <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
-                        <CardContent className="py-4">
+                    <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 overflow-hidden">
+                        <CardContent className="p-4">
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">Total gastado</p>
                             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                                 ${totalExpenses.toFixed(2)}
                             </p>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardContent className="py-4">
+                    <Card className="overflow-hidden">
+                        <CardContent className="p-4">
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">Por persona</p>
                             <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                                 ${perPerson.toFixed(2)}

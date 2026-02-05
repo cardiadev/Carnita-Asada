@@ -257,35 +257,40 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
                 💡 Sugerencias
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md">
-              <SheetHeader className="mb-4">
+            <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
+              <SheetHeader className="p-6 pb-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20">
                 <SheetTitle>Sugerencias</SheetTitle>
                 <SheetDescription>
                   Agrega items rápidamente tocando los botones
                 </SheetDescription>
               </SheetHeader>
-              <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-160px)] pr-2">
-                {categories.map((category, index) => (
-                  <div key={category.id} className="mb-8 last:mb-0">
-                    {index > 0 && <Separator className="mb-6" />}
-                    <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100 mb-4">
-                      {category.name}
-                    </h3>
-                    <div className="flex flex-wrap gap-3">
-                      {category.suggested_items?.map((suggestion) => (
-                        <Button
-                          key={suggestion.id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAddSuggestion(suggestion)}
-                          className="text-sm bg-zinc-50 dark:bg-zinc-800/50 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-800 border-zinc-200 dark:border-zinc-700 transition-all rounded-full px-4"
-                        >
-                          + {suggestion.name}
-                        </Button>
-                      ))}
+              <div className="flex-1 overflow-y-auto p-6 pt-4">
+                <div className="space-y-6">
+                  {categories.map((category, index) => (
+                    <div key={category.id} className="mb-6 last:mb-0">
+                      <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                        {category.name}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {category.suggested_items?.map((suggestion) => (
+                          <Button
+                            key={suggestion.id}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddSuggestion(suggestion)}
+                            className="text-sm bg-white dark:bg-zinc-800/50 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-800 border-zinc-200 dark:border-zinc-700 transition-all rounded-full px-4"
+                          >
+                            + {suggestion.name}
+                          </Button>
+                        ))}
+                      </div>
+                      {index < categories.length - 1 && (
+                        <Separator className="mt-8 opacity-50" />
+                      )}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -293,8 +298,8 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
       </div>
 
       {/* Formulario agregar */}
-      <Card className="mb-6">
-        <CardContent className="pt-4">
+      <Card className="mb-6 overflow-hidden">
+        <CardContent className="p-4">
           <form onSubmit={handleAddItem} className="space-y-3">
             <div className="flex gap-2">
               <Input
@@ -359,7 +364,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="py-4">
+              <CardContent className="p-4">
                 <div className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
               </CardContent>
             </Card>
@@ -367,7 +372,7 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
         </div>
       ) : items.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+          <CardContent className="p-8 text-center text-zinc-500 dark:text-zinc-400">
             <p>No hay items en la lista</p>
             <p className="text-sm mt-1">Agrega items o usa las sugerencias</p>
           </CardContent>
@@ -379,11 +384,11 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
             if (!categoryItems?.length) return null
 
             return (
-              <Card key={category.id}>
-                <CardHeader className="pb-2">
+              <Card key={category.id} className="overflow-hidden">
+                <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                   <CardTitle className="text-lg">{category.name}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="p-4 space-y-2">
                   {categoryItems.map((item) => (
                     <div
                       key={item.id}
@@ -438,11 +443,11 @@ export default function ShoppingPage({ params }: ShoppingPageProps) {
 
           {/* Items sin categoría */}
           {itemsByCategory['sin-categoria']?.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="overflow-hidden">
+              <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
                 <CardTitle className="text-lg">Otros</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="p-4 space-y-2">
                 {itemsByCategory['sin-categoria'].map((item) => (
                   <div
                     key={item.id}

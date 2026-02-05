@@ -289,8 +289,8 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
       </div>
 
       {/* Formulario agregar - Bulk */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
+      <Card className="mb-6 overflow-hidden">
+        <CardContent className="p-4">
           <form onSubmit={handleAddAttendees} className="space-y-3">
             {newNames.map((name, index) => (
               <div key={index} className="flex gap-2">
@@ -342,7 +342,7 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="py-4">
+              <CardContent className="p-4">
                 <div className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
               </CardContent>
             </Card>
@@ -350,7 +350,7 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
         </div>
       ) : attendees.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+          <CardContent className="p-8 text-center text-zinc-500 dark:text-zinc-400">
             <p>No hay asistentes todavía</p>
             <p className="text-sm mt-1">Agrega a las personas que irán a la carnita</p>
           </CardContent>
@@ -361,11 +361,11 @@ export default function AttendeesPage({ params }: AttendeePageProps) {
             <Card
               key={attendee.id}
               className={attendee.exclude_from_split
-                ? 'border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 opacity-70'
-                : 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+                ? 'border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50 opacity-70 overflow-hidden'
+                : 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10 overflow-hidden'
               }
             >
-              <CardContent className="py-4">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${attendee.exclude_from_split
