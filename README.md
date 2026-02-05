@@ -1,38 +1,166 @@
-# Carnita Asada
+# 🥩 Carnita Asada
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A modern web application to organize Mexican-style BBQ events ("Carnitas Asadas"). Plan your gathering, manage attendees, track expenses, and split costs fairly among participants.
 
-## Getting Started
+> **Note:** The application interface is in **Spanish** 🇲🇽, as it's designed primarily for Mexican users organizing traditional BBQ gatherings.
 
-First, run the development server:
+## ✨ Features
 
+### 📅 Event Management
+- Create and manage BBQ events with date, time, and location
+- Real-time countdown timer to event day
+- Share event links with friends and family
+- Cancel events with confirmation flow
+
+### 👥 Attendee Management
+- Add multiple attendees at once (bulk add)
+- Include or exclude participants from expense splits
+- Store banking information for easy payments (CLABE, bank name, account holder)
+
+### 🛒 Shopping List
+- Collaborative shopping list with categories
+- Pre-built templates for quick setup (Basic BBQ, Premium, etc.)
+- Quick-add suggestions for common items
+- Mark items as purchased with visual feedback
+- Categorized view: Meats, Drinks, Sides, Accessories, and more
+
+### 💰 Expense Tracking
+- Record all expenses with descriptions and amounts
+- Assign expenses to specific attendees
+- Upload receipt photos for reference
+- Track total event spending in real-time
+
+### 💸 Payment Management
+- Automatic fair split calculation
+- Suggested transfers between attendees
+- Bank info modal with copy-to-clipboard functionality
+- WhatsApp integration for payment coordination
+- Mark payments as completed with undo option
+
+### 📊 Reports & Analytics
+- Visual charts using D3.js
+- Expense breakdown by category
+- Spending distribution per person
+- Payment status overview
+
+### 🍖 Suggestions & Recipes
+- Meat calculation recommendations (grams per person by age/gender)
+- Cut recommendations with ratings (Arrachera, Rib Eye, Costilla, etc.)
+- Recipe collection for salsas, marinades, and sides
+
+### 🎨 Modern UI/UX
+- Responsive design (mobile-first)
+- Dark mode support
+- Hamburger menu for mobile navigation
+- Clean, modern interface with shadcn/ui components
+- Smooth animations and transitions
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+- **Runtime:** [Bun](https://bun.sh/) / Node.js
+- **Language:** TypeScript
+- **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Styling:** Tailwind CSS 4
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) + Radix UI
+- **Forms:** React Hook Form + Zod validation
+- **Charts:** D3.js
+- **Icons:** Lucide React
+- **Notifications:** Sonner (toast)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (recommended) or Node.js 18+
+- [Supabase](https://supabase.com/) account
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+git clone https://github.com/yourusername/carnita-asada.git
+cd carnita-asada
+```
+
+2. Install dependencies:
+```bash
+bun install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and add your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+4. Run the development server:
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+carnita-asada/
+├── app/                    # Next.js App Router pages
+│   ├── [eventId]/          # Event-specific pages
+│   │   ├── attendees/      # Attendee management
+│   │   ├── expenses/       # Expense tracking
+│   │   ├── recipes/        # Recipe suggestions
+│   │   ├── report/         # Analytics & charts
+│   │   ├── settings/       # Event settings
+│   │   ├── shopping/       # Shopping list
+│   │   ├── suggestions/    # Meat & cut recommendations
+│   │   └── summary/        # Payment splits
+│   └── api/                # API routes
+├── components/             # React components
+│   ├── ui/                 # shadcn/ui components
+│   ├── layout/             # Layout components
+│   └── event/              # Event-specific components
+├── lib/                    # Utilities & helpers
+├── hooks/                  # Custom React hooks
+├── types/                  # TypeScript type definitions
+└── supabase/               # Database migrations
+```
 
-## Learn More
+## 🗄️ Database Schema
 
-To learn more about Next.js, take a look at the following resources:
+The app uses Supabase with the following main tables:
+- `events` - BBQ event details
+- `attendees` - Event participants
+- `expenses` - Recorded expenses
+- `shopping_items` - Shopping list items
+- `categories` - Item categories
+- `suggested_items` - Pre-defined suggestions
+- `bank_info` - Attendee banking details
+- `payments` - Payment records
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 Screenshots
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+*Coming soon*
 
-## Deploy on Vercel
+## 🤝 Contributing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful UI components
+- [Supabase](https://supabase.com/) for the backend infrastructure
+- [Lucide](https://lucide.dev/) for the icon library
+
+---
+
+Made with 🔥 and 🥩 for all the parrilleros out there!
