@@ -42,6 +42,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       title: event.title,
       eventDate: event.event_date,
       location: event.location,
+      description: event.description,
+      maps_url: event.maps_url,
       cancelledAt: event.cancelled_at,
       peopleCount: event.people_count,
       attendees: event.attendees,
@@ -97,6 +99,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       if (result.data.eventDate) updateData.event_date = result.data.eventDate
       if (result.data.peopleCount !== undefined) updateData.people_count = result.data.peopleCount
       if (result.data.location !== undefined) updateData.location = result.data.location
+      if (result.data.description !== undefined) updateData.description = result.data.description
+      if (result.data.mapsUrl !== undefined) updateData.maps_url = result.data.mapsUrl
     }
 
     const { data, error } = await supabase
@@ -120,6 +124,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       title: data.title,
       eventDate: data.event_date,
       location: data.location,
+      description: data.description,
+      maps_url: data.maps_url,
       cancelledAt: data.cancelled_at,
       peopleCount: data.people_count,
     })

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils/currency'
-import { DollarSign, Users, MessageCircle, ArrowRight } from 'lucide-react'
+import { DollarSign, Users, MessageCircle, ArrowRight, MapPin, Megaphone, Beef, Lightbulb, ExternalLink, PieChart } from 'lucide-react'
 
 interface EventPageProps {
   params: Promise<{ eventId: string }>
@@ -18,6 +18,8 @@ interface EventWithAttendees {
   title: string
   event_date: string
   location: string | null
+  description: string | null
+  maps_url: string | null
   cancelled_at: string | null
   people_count: number
   created_at: string
@@ -31,6 +33,25 @@ interface PersonBalance {
   paid: number
   balance: number
 }
+
+// Sugerencias de cortes de carne y cantidades
+const MEAT_SUGGESTIONS = [
+  { name: 'Arrachera', quantity: '150-200g', icon: '🥩' },
+  { name: 'Costilla', quantity: '200-250g', icon: '🍖' },
+  { name: 'Chorizo', quantity: '100g', icon: '🌭' },
+  { name: 'Pollo', quantity: '150g', icon: '🍗' },
+  { name: 'Bistec', quantity: '150g', icon: '🥩' },
+]
+
+const RECOMMENDED_ITEMS = [
+  'Carbón (1kg por cada 4 personas)',
+  'Tortillas (1/2 kg por persona)',
+  'Limones (2 por persona)',
+  'Salsa y guacamole',
+  'Cebollas y chiles para asar',
+  'Servilletas y platos desechables',
+  'Hielo y bebidas',
+]
 
 export default async function EventPage({ params }: EventPageProps) {
   const { eventId } = await params
@@ -98,9 +119,30 @@ export default async function EventPage({ params }: EventPageProps) {
           title={event.title}
           attendeesCount={attendeesCount}
           location={event.location}
+          mapsUrl={event.maps_url}
           cancelled={!!event.cancelled_at}
         />
       </div>
+
+      {/* Location with Maps Link - MOVED TO COUNTDOWN */}
+
+
+      {/* Announcements / Description */}
+      {event.description && (
+        <Card className="mb-6 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <Megaphone className="h-5 w-5" />
+              Avisos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line">
+              {event.description}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats - More Visual */}
       <div className="grid grid-cols-2 gap-4 mb-6">
@@ -140,11 +182,14 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Payment Progress */}
       {balances.length > 0 && (
-        <Card className="mb-6">
+        <Card className="mb-6 border-zinc-200 dark:border-zinc-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center justify-between">
-              Estado de pagos
-              <Badge variant="outline">
+            <CardTitle className="text-base flex items-center justify-between font-semibold text-zinc-700 dark:text-zinc-300">
+              <div className="flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-blue-500" />
+                Estado de pagos
+              </div>
+              <Badge variant="secondary" className="font-normal">
                 {completedPayments.length}/{balances.length} al día
               </Badge>
             </CardTitle>
@@ -162,9 +207,10 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Pending Payments */}
       {pendingPayments.length > 0 && (
-        <Card className="mb-6 border-red-200 dark:border-red-800">
-          <CardHeader>
-            <CardTitle className="text-lg text-red-700 dark:text-red-400">
+        <Card className="mb-6 border-zinc-200 dark:border-zinc-700">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2 font-semibold text-zinc-700 dark:text-zinc-300">
+              <Users className="h-5 w-5 text-red-500" />
               ¿Quién falta por pagar?
             </CardTitle>
           </CardHeader>
@@ -172,10 +218,10 @@ export default async function EventPage({ params }: EventPageProps) {
             {pendingPayments.map((person) => (
               <div
                 key={person.attendeeId}
-                className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg"
+                className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-red-600 dark:text-red-400 font-medium">
+                  <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-400 font-medium">
                     {person.name.charAt(0).toUpperCase()}
                   </div>
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -183,7 +229,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                  <Badge className="bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-medium">
                     Debe {formatCurrency(Math.abs(person.balance))}
                   </Badge>
                   <a
@@ -198,7 +244,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 </div>
               </div>
             ))}
-            <Button asChild className="w-full mt-4" variant="default">
+            <Button asChild className="w-full mt-4" variant="secondary">
               <Link href={`/${eventId}/summary`}>
                 Ver pagos y transferencias
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -225,7 +271,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
       {/* Empty State */}
       {balances.length === 0 && (
-        <Card className="mb-6">
+        <Card className="mb-6 border-zinc-200 dark:border-zinc-700">
           <CardContent className="py-8 text-center text-zinc-500 dark:text-zinc-400">
             <p>Agrega asistentes y registra gastos para ver el estado de pagos</p>
             <div className="flex justify-center gap-4 mt-4">
@@ -243,6 +289,61 @@ export default async function EventPage({ params }: EventPageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Suggestions Section */}
+      <Card className="mb-6 border-zinc-200 dark:border-zinc-700 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
+          <CardTitle className="text-base flex items-center justify-between font-semibold text-zinc-700 dark:text-zinc-300">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-yellow-500" />
+              Sugerencias para tu Carnita Asada
+            </div>
+            <Button variant="ghost" size="sm" asChild className="text-xs font-normal hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-950/30">
+              <Link href={`/${eventId}/suggestions`}>
+                Ver más <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          {/* Meat Cuts */}
+          <div>
+            <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
+              <Beef className="h-4 w-4 text-red-500" />
+              Cortes de carne (cantidad por persona)
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {MEAT_SUGGESTIONS.map((meat) => (
+                <div
+                  key={meat.name}
+                  className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl text-sm border border-zinc-100 dark:border-zinc-800 shadow-sm transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <span className="text-2xl">{meat.icon}</span>
+                  <div>
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight">{meat.name}</p>
+                    <p className="text-[11px] text-zinc-500 leading-tight mt-1">{meat.quantity}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommended Items */}
+          <div>
+            <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3 flex items-center gap-2">
+              📋 No olvides
+            </h4>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+              {RECOMMENDED_ITEMS.map((item, index) => (
+                <li key={index} className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

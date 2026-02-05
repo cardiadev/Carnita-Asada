@@ -1,7 +1,7 @@
 'use client'
 
 import { useCountdown } from '@/hooks/use-countdown'
-import { formatDateTime } from '@/lib/utils/date'
+import { formatDateTime, formatDateOnly, formatTimeOnly } from '@/lib/utils/date'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Users } from 'lucide-react'
@@ -11,10 +11,11 @@ interface CountdownProps {
   title?: string
   attendeesCount?: number
   location?: string | null
+  mapsUrl?: string | null
   cancelled?: boolean
 }
 
-export function Countdown({ targetDate, title, attendeesCount, location, cancelled }: CountdownProps) {
+export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl, cancelled }: CountdownProps) {
   const { days, hours, minutes, seconds, isExpired } = useCountdown(targetDate)
 
   const targetDateObj = typeof targetDate === 'string' ? new Date(targetDate) : targetDate
@@ -35,12 +36,6 @@ export function Countdown({ targetDate, title, attendeesCount, location, cancell
           <Badge variant="secondary" className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             {attendeesCount} {attendeesCount === 1 ? 'asistente' : 'asistentes'}
-          </Badge>
-        )}
-        {location && (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {location}
           </Badge>
         )}
       </div>
@@ -118,9 +113,28 @@ export function Countdown({ targetDate, title, attendeesCount, location, cancell
           <TimeUnit value={minutes} label="min" />
           <TimeUnit value={seconds} label="seg" />
         </div>
-        <p className="text-center text-sm text-zinc-600 dark:text-zinc-400 mt-4 capitalize">
-          {formatDateTime(targetDate)}
-        </p>
+        <div className="text-center mt-4 space-y-1">
+          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 capitalize">
+            {formatDateOnly(targetDate)}
+          </p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 uppercase">
+            {formatTimeOnly(targetDate)}
+          </p>
+        </div>
+
+        {location && mapsUrl && (
+          <div className="mt-6 flex justify-center">
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all group"
+            >
+              <MapPin className="h-4 w-4 text-red-500 group-hover:animate-bounce" />
+              <span className="font-semibold text-sm">{location}</span>
+            </a>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

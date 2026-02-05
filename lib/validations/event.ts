@@ -23,6 +23,8 @@ export const updateEventSchema = z.object({
   eventDate: z.string().optional(),
   peopleCount: z.number().int().min(0).optional(),
   location: z.string().max(255).optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  mapsUrl: z.string().url().max(500).optional().nullable(),
 })
 
 export type CreateEventInput = z.infer<typeof createEventSchema>

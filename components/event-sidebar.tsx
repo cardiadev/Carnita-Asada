@@ -14,6 +14,8 @@ import {
     Share2,
     XCircle,
     Heart,
+    Settings,
+    Lightbulb,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -65,9 +67,19 @@ const navItems = [
         href: "/summary",
     },
     {
-        title: "Gráficos",
+        title: "Reporte",
         icon: BarChart3,
-        href: "/charts",
+        href: "/report",
+    },
+    {
+        title: "Sugerencias",
+        icon: Lightbulb,
+        href: "/suggestions",
+    },
+    {
+        title: "Ajustes",
+        icon: Settings,
+        href: "/settings",
     },
 ]
 
@@ -114,11 +126,11 @@ export function EventSidebar({ eventId, eventTitle, onCancelClick, ...props }: E
                                 </div>
                                 {!isCollapsed && (
                                     <div className="grid flex-1 text-left text-sm leading-tight">
-                                        <span className="truncate font-medium">
-                                            {eventTitle || "Carnita Asada"}
+                                        <span className="truncate font-semibold">
+                                            Carnita Asada
                                         </span>
                                         <span className="truncate text-xs text-muted-foreground">
-                                            Organiza tu evento
+                                            ¿Se va armar?
                                         </span>
                                     </div>
                                 )}

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Carnita Asada - Organiza tu parrillada",
+  title: "Carnita Asada - ¿se va armar la carnita asada?",
   description: "Organiza tu carnita asada: lista de compras, gastos y división entre amigos. Creado por @cardiadev",
 };
 

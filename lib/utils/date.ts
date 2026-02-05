@@ -81,3 +81,19 @@ export function toDateTimeLocal(date: Date): string {
   const localDate = new Date(date.getTime() - offset * 60 * 1000)
   return localDate.toISOString().slice(0, 16)
 }
+
+/**
+ * Formatea solo la fecha (Domingo 8 de Febrero)
+ */
+export function formatDateOnly(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return format(d, "EEEE d 'de' MMMM", { locale: es })
+}
+
+/**
+ * Formatea solo la hora (12:00 PM)
+ */
+export function formatTimeOnly(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return format(d, 'h:mm a', { locale: es })
+}
