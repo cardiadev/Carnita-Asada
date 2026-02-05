@@ -11,7 +11,7 @@ interface CurrencyInputProps extends Omit<React.ComponentProps<typeof Input>, 't
 const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
     ({ className, symbol = '$', ...props }, ref) => {
         return (
-            <div className="relative">
+            <div className={cn("relative", className)}>
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 select-none pointer-events-none">
                     {symbol}
                 </span>
@@ -19,7 +19,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
                     type="number"
                     step="0.01"
                     min="0"
-                    className={cn('pl-7', className)}
+                    className="pl-7 w-full"
                     ref={ref}
                     {...props}
                 />

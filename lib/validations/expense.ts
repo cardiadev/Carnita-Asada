@@ -8,7 +8,7 @@ export const createExpenseSchema = z.object({
     .min(1, 'La descripción es requerida')
     .max(255, 'La descripción es muy larga'),
   amount: z.number().positive('El monto debe ser positivo'),
-  receiptUrl: z.string().url().optional(),
+  receiptUrl: z.string().optional(),
   excludedAttendees: z.array(z.string().uuid()).optional(),
 })
 
@@ -20,7 +20,7 @@ export const updateExpenseSchema = z.object({
     .max(255, 'La descripción es muy larga')
     .optional(),
   amount: z.number().positive('El monto debe ser positivo').optional(),
-  receiptUrl: z.string().url().nullable().optional(),
+  receiptUrl: z.string().nullable().optional(),
   excludedAttendees: z.array(z.string().uuid()).optional(),
 })
 

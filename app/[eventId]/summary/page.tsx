@@ -309,7 +309,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
       </div>
 
       {/* Totales - Visual Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm overflow-hidden">
           <CardContent className="p-5">
             <div className="flex flex-col gap-1">
@@ -357,17 +357,18 @@ export default function SummaryPage({ params }: SummaryPageProps) {
               <div key={b.attendee.id}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 font-medium hidden sm:flex">
                       {b.attendee.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <p className="font-medium text-zinc-900 dark:text-zinc-100">
                           {b.attendee.name}
                         </p>
-                        <Badge className="text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
+                        <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none">
                           <UserCheck className="h-3 w-3 mr-1" />
-                          Incluido en gastos
+                          <span className="hidden sm:inline">Incluido en gastos</span>
+                          <span className="sm:hidden">Incluido</span>
                         </Badge>
                       </div>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -427,7 +428,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                   className="flex items-center justify-between p-3 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-medium text-sm">
+                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-medium text-sm hidden sm:flex">
                       {a.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-zinc-700 dark:text-zinc-300">
@@ -461,7 +462,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                 {/* Debtor Header */}
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-700">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 font-medium text-sm">
+                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 font-medium text-sm hidden sm:flex">
                       {debtor.attendee.name.charAt(0).toUpperCase()}
                     </div>
                     <p className="font-medium text-zinc-900 dark:text-zinc-100">

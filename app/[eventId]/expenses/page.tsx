@@ -36,7 +36,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [attendeeId, setAttendeeId] = useState('')
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [receiptFiles, setReceiptFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -45,7 +45,11 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
   const [editDescription, setEditDescription] = useState('')
   const [editAmount, setEditAmount] = useState('')
   const [editAttendeeId, setEditAttendeeId] = useState('')
+  const [editReceiptFiles, setEditReceiptFiles] = useState<File[]>([])
+  const [editReceiptUrl, setEditReceiptUrl] = useState<string | null>(null)
+  const [deleteReceipt, setDeleteReceipt] = useState(false)
   const [isEditSaving, setIsEditSaving] = useState(false)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   // Receipt modal state
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
@@ -97,29 +101,31 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
     setIsSubmitting(true)
 
     try {
-      let receiptUrl: string | undefined
+      const receiptUrls: string[] = []
 
-      // Subir comprobante si hay
-      if (receiptFile) {
-        const formData = new FormData()
-        formData.append('file', receiptFile)
-        formData.append('eventId', eventUuid)
+      // Subir todos los comprobantes seleccionados
+      if (receiptFiles.length > 0 && eventUuid) {
+        for (const file of receiptFiles) {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('eventId', eventUuid)
 
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          })
 
-        const uploadData = await uploadRes.json()
-
-        if (!uploadRes.ok) {
-          throw new Error(uploadData.error || 'Error al subir comprobante')
+          const uploadData = await uploadRes.json()
+          if (uploadRes.ok) {
+            receiptUrls.push(uploadData.url)
+          } else {
+            console.error('Error uploading file:', uploadData.error)
+            toast.error(`Error al subir ${file.name}`)
+          }
         }
-
-        receiptUrl = uploadData.url
       }
 
-      // Crear gasto
+      // Crear gasto (guardamos URLs como JSON si son varias)
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,7 +134,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
           attendeeId: attendeeId || undefined,
           description: description.trim(),
           amount: parseFloat(amount),
-          receiptUrl,
+          receiptUrl: receiptUrls.length > 0 ? JSON.stringify(receiptUrls) : undefined,
         }),
       })
 
@@ -142,7 +148,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
       setDescription('')
       setAmount('')
       setAttendeeId('')
-      setReceiptFile(null)
+      setReceiptFiles([])
       if (fileInputRef.current) fileInputRef.current.value = ''
       setIsDialogOpen(false)
       toast.success('Gasto registrado')
@@ -171,6 +177,10 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
     setEditDescription(expense.description)
     setEditAmount(String(expense.amount))
     setEditAttendeeId(expense.attendee_id || '')
+    setEditReceiptUrl(expense.receipt_url || null) // This could be a JSON string
+    setEditReceiptFiles([])
+    setDeleteReceipt(false)
+    if (editFileInputRef.current) editFileInputRef.current.value = ''
   }
 
   const handleSaveEdit = async () => {
@@ -178,6 +188,44 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
     setIsEditSaving(true)
     try {
+      // Parse current URLs if they exist
+      let currentUrls: string[] = []
+      if (editReceiptUrl) {
+        try {
+          currentUrls = JSON.parse(editReceiptUrl)
+          if (!Array.isArray(currentUrls)) currentUrls = [editReceiptUrl]
+        } catch {
+          currentUrls = [editReceiptUrl]
+        }
+      }
+
+      const receiptUrlsToKeep = deleteReceipt ? [] : [...currentUrls]
+
+      // Upload new receipts
+      if (editReceiptFiles.length > 0 && eventUuid) {
+        for (const file of editReceiptFiles) {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('eventId', eventUuid)
+
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          })
+
+          const uploadData = await uploadRes.json()
+          if (uploadRes.ok) {
+            receiptUrlsToKeep.push(uploadData.url)
+          } else {
+            toast.error(`Error al subir ${file.name}`)
+          }
+        }
+      }
+
+      const finalReceiptUrl = receiptUrlsToKeep.length > 0
+        ? JSON.stringify(receiptUrlsToKeep)
+        : null
+
       const res = await fetch(`/api/expenses/${editingExpense.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -185,6 +233,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
           description: editDescription.trim(),
           amount: parseFloat(editAmount),
           attendeeId: editAttendeeId || null,
+          receiptUrl: finalReceiptUrl,
         }),
       })
 
@@ -237,6 +286,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={isSubmitting}
+                  className="w-full"
                 />
               </div>
 
@@ -249,13 +299,14 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                   onChange={(e) => setAmount(e.target.value)}
                   disabled={isSubmitting}
                   min="0.01"
+                  className="w-full"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="attendee">¿Quién compró?</Label>
                 <Select value={attendeeId} onValueChange={setAttendeeId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleccionar persona" />
                   </SelectTrigger>
                   <SelectContent>
@@ -269,28 +320,69 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="receipt">Comprobante (opcional)</Label>
+                <Label htmlFor="receipt">Comprobantes (opcional)</Label>
                 <Input
                   id="receipt"
                   type="file"
                   accept="image/*"
+                  multiple
                   ref={fileInputRef}
-                  onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const files = e.target.files
+                    if (files) {
+                      setReceiptFiles(prev => [...prev, ...Array.from(files)])
+                    }
+                  }}
                   disabled={isSubmitting}
+                  className="w-full"
                 />
-                {receiptFile && (
-                  <p className="text-sm text-zinc-500">{receiptFile.name}</p>
+                {receiptFiles.length > 0 && (
+                  <div className="space-y-1 mt-2">
+                    {receiptFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-900/10 p-2 rounded-md overflow-hidden min-w-0 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
+                        onClick={() => {
+                          const url = URL.createObjectURL(file);
+                          setSelectedReceipt(url);
+                        }}
+                      >
+                        <FileText className="h-4 w-4 shrink-0" />
+                        <span className="flex-1 text-xs sm:text-sm line-clamp-2 break-all min-w-0 font-medium">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReceiptFiles(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="text-red-500 hover:text-red-600 shrink-0 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800/30"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={isSubmitting}
-                className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
-              >
-                {isSubmitting ? 'Guardando...' : 'Guardar gasto'}
-              </Button>
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={isSubmitting}
+                  className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+                >
+                  {isSubmitting ? 'Guardando...' : 'Guardar gasto'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="w-full"
+                >
+                  Cancelar
+                </Button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
@@ -415,6 +507,7 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 disabled={isEditSaving}
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
@@ -424,12 +517,13 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                 value={editAmount}
                 onChange={(e) => setEditAmount(e.target.value)}
                 disabled={isEditSaving}
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="editAttendee">¿Quién pagó?</Label>
               <Select value={editAttendeeId} onValueChange={setEditAttendeeId} disabled={isEditSaving}>
-                <SelectTrigger id="editAttendee">
+                <SelectTrigger id="editAttendee" className="w-full">
                   <SelectValue placeholder="Seleccionar persona" />
                 </SelectTrigger>
                 <SelectContent>
@@ -441,18 +535,151 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Receipt management */}
+            <div className="space-y-2">
+              <Label>Comprobantes actuales</Label>
+              {(() => {
+                let urls: string[] = []
+                if (editReceiptUrl) {
+                  try {
+                    urls = JSON.parse(editReceiptUrl)
+                    if (!Array.isArray(urls)) urls = [editReceiptUrl]
+                  } catch {
+                    urls = [editReceiptUrl]
+                  }
+                }
+
+                if (urls.length === 0 || deleteReceipt) {
+                  if (deleteReceipt) {
+                    return (
+                      <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <span className="flex-1 text-sm text-red-600 dark:text-red-400">
+                          Se eliminarán todos los comprobantes actuales
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteReceipt(false)}
+                          className="shrink-0"
+                          disabled={isEditSaving}
+                        >
+                          Deshacer
+                        </Button>
+                      </div>
+                    )
+                  }
+                  return <p className="text-sm text-zinc-500 italic">No hay comprobantes</p>
+                }
+
+                return (
+                  <div className="space-y-2">
+                    {urls.map((url, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden group hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                        onClick={() => setSelectedReceipt(url)}
+                      >
+                        <FileText className="h-5 w-5 text-zinc-500 shrink-0" />
+                        <span className="flex-1 text-sm line-clamp-2 break-all min-w-0 font-medium">
+                          Comprobante {urls.length > 1 ? idx + 1 : ''}
+                        </span>
+                        {urls.length === 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteReceipt(true);
+                            }}
+                            className="shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            disabled={isEditSaving}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    {urls.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteReceipt(true)}
+                        className="w-full text-red-500 hover:text-red-600 border border-red-100 dark:border-red-900/30"
+                        disabled={isEditSaving}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar todos
+                      </Button>
+                    )}
+                  </div>
+                )
+              })()}
+
+              <div className="space-y-1 pt-2">
+                <Label htmlFor="editReceipt" className="text-sm text-zinc-500">
+                  {editReceiptUrl && !deleteReceipt ? 'Agregar más comprobantes' : 'Subir comprobantes'}
+                </Label>
+                <Input
+                  id="editReceipt"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  ref={editFileInputRef}
+                  onChange={(e) => {
+                    const files = e.target.files
+                    if (files) {
+                      setEditReceiptFiles(prev => [...prev, ...Array.from(files)])
+                      setDeleteReceipt(false)
+                    }
+                  }}
+                  disabled={isEditSaving}
+                  className="w-full"
+                />
+                {editReceiptFiles.length > 0 && (
+                  <div className="space-y-1 mt-2">
+                    {editReceiptFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-900/10 p-2 rounded-md overflow-hidden min-w-0 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
+                        onClick={() => {
+                          const url = URL.createObjectURL(file);
+                          setSelectedReceipt(url);
+                        }}
+                      >
+                        <FileText className="h-4 w-4 shrink-0" />
+                        <span className="flex-1 text-xs sm:text-sm line-clamp-2 break-all min-w-0 font-medium">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditReceiptFiles(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="text-red-500 hover:text-red-600 shrink-0 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800/30"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingExpense(null)}>
-              Cancelar
-            </Button>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
               variant="outline"
               onClick={handleSaveEdit}
               disabled={isEditSaving}
-              className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
+              className="w-full bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 font-bold text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all"
             >
               {isEditSaving ? 'Guardando...' : 'Guardar'}
+            </Button>
+            <Button variant="outline" onClick={() => setEditingExpense(null)} className="w-full">
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
