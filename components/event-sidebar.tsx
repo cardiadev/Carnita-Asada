@@ -97,7 +97,7 @@ export function EventSidebar({ eventId, eventTitle, onCancelClick, ...props }: E
     const handleShare = async () => {
         const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
         const eventUrl = `${appUrl}/${eventId}`
-        const shareText = `🔥 ¡Únete a ${eventTitle || 'nuestra carnita asada'}!\n\n${eventUrl}`
+        const shareText = `🔥 ¡Únete a ${eventTitle || 'nuestra carnita asada'}!`
 
         if (navigator.share) {
             try {

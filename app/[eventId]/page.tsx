@@ -34,6 +34,23 @@ interface PersonBalance {
   balance: number
 }
 
+interface Payment {
+  id: string
+  from_attendee_id: string
+  to_attendee_id: string
+  amount: number
+  status: string
+}
+
+interface PendingTransfer {
+  debtorId: string
+  debtorName: string
+  creditorId: string
+  creditorName: string
+  amount: number
+  isPaid: boolean
+}
+
 // Sugerencias de cortes de carne y cantidades
 const MEAT_SUGGESTIONS = [
   { name: 'Arrachera', quantity: '150-200g', icon: '🥩' },
@@ -81,6 +98,16 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const expenses = expensesData as Array<{ amount: number; attendee_id: string | null }> | null
   const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0
+
+  // Obtener pagos marcados como completados
+  const { data: paymentsData } = await supabase
+    .from('payments')
+    .select('id, from_attendee_id, to_attendee_id, amount, status')
+    .eq('event_id', event.id)
+    .eq('status', 'completed')
+
+  const payments = paymentsData as Payment[] | null
+  const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
   const attendeesCount = event.attendees?.length || 0
   const activeAttendees = event.attendees?.filter((a) => !a.exclude_from_split) || []
   const activeCount = activeAttendees.length
@@ -100,8 +127,68 @@ export default async function EventPage({ params }: EventPageProps) {
     }
   })
 
-  const pendingPayments = balances.filter(b => b.balance < 0)
-  const completedPayments = balances.filter(b => b.balance >= 0)
+  // Helper: Check if a specific transfer is paid
+  const isTransferPaid = (fromId: string, toId: string) => {
+    return payments?.some(p =>
+      p.from_attendee_id === fromId &&
+      p.to_attendee_id === toId &&
+      p.status === 'completed'
+    ) || false
+  }
+
+  // Calculate all transfers using settlement algorithm
+  const calculateAllTransfers = (): PendingTransfer[] => {
+    const allTransfers: PendingTransfer[] = []
+
+    // Create mutable copies of balances
+    const debtorBalances = balances
+      .filter(b => b.balance < 0)
+      .map(b => ({ ...b, remaining: Math.abs(b.balance) }))
+
+    const creditorBalances = balances
+      .filter(b => b.balance > 0)
+      .map(b => ({ ...b, remaining: b.balance }))
+
+    // Calculate transfers for each debtor
+    for (const debtor of debtorBalances) {
+      let debtRemaining = debtor.remaining
+
+      for (const creditor of creditorBalances) {
+        if (debtRemaining <= 0 || creditor.remaining <= 0) continue
+
+        const transferAmount = Math.min(debtRemaining, creditor.remaining)
+
+        if (transferAmount > 0.01) {
+          allTransfers.push({
+            debtorId: debtor.attendeeId,
+            debtorName: debtor.name,
+            creditorId: creditor.attendeeId,
+            creditorName: creditor.name,
+            amount: transferAmount,
+            isPaid: isTransferPaid(debtor.attendeeId, creditor.attendeeId)
+          })
+
+          debtRemaining -= transferAmount
+          creditor.remaining -= transferAmount
+        }
+      }
+    }
+
+    return allTransfers
+  }
+
+  const allTransfers = calculateAllTransfers()
+  const pendingTransfers = allTransfers.filter(t => !t.isPaid)
+  const completedTransfers = allTransfers.filter(t => t.isPaid)
+
+  // Group pending transfers by debtor for display
+  const pendingDebtors = [...new Set(pendingTransfers.map(t => t.debtorId))]
+  const completedDebtors = balances
+    .filter(b => b.balance >= 0 || !pendingDebtors.includes(b.attendeeId))
+  const pendingPayments = balances
+    .filter(b => pendingDebtors.includes(b.attendeeId))
+  const completedPayments = balances
+    .filter(b => !pendingDebtors.includes(b.attendeeId))
 
   // WhatsApp reminder function
   const getWhatsAppUrl = (personName: string) => {
@@ -121,6 +208,7 @@ export default async function EventPage({ params }: EventPageProps) {
           location={event.location}
           mapsUrl={event.maps_url}
           cancelled={!!event.cancelled_at}
+          description={event.description}
         />
       </div>
 
@@ -128,7 +216,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
 
       {/* Stats - More Visual (CRITICAL: PRIORITY AT TOP) */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-xl shadow-orange-100/50 dark:shadow-none border-2">
           <CardContent className="p-5">
             <div className="flex flex-col">
@@ -161,6 +249,20 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800/30 shadow-xl shadow-green-100/50 dark:shadow-none border-2">
+          <CardContent className="p-5">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
+                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <p className="text-base font-bold tracking-wide">Pagado</p>
+              </div>
+              <p className="text-3xl font-black text-zinc-900 dark:text-zinc-100 leading-none">
+                {formatCurrency(totalPaid)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Payment Progress */}
@@ -188,25 +290,10 @@ export default async function EventPage({ params }: EventPageProps) {
         </Card>
       )}
 
-      {/* Announcements / Description */}
-      {event.description && (
-        <Card className="mb-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/50">
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <Megaphone className="h-5 w-5" />
-              Avisos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line text-sm">
-              {event.description}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Pending Payments */}
-      {pendingPayments.length > 0 && (
+      {pendingTransfers.length > 0 && (
         <Card className="mb-4 border-zinc-200 dark:border-zinc-700">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base flex items-center gap-2 font-semibold text-zinc-700 dark:text-zinc-300">
@@ -215,25 +302,30 @@ export default async function EventPage({ params }: EventPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
-            {pendingPayments.map((person) => (
+            {pendingTransfers.map((transfer) => (
               <div
-                key={person.attendeeId}
+                key={`${transfer.debtorId}-${transfer.creditorId}`}
                 className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-400 font-medium">
-                    {person.name.charAt(0).toUpperCase()}
+                    {transfer.debtorName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                    {person.name}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {transfer.debtorName}
+                    </span>
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                      → {transfer.creditorName}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-medium">
-                    Debe {formatCurrency(Math.abs(person.balance))}
+                    {formatCurrency(transfer.amount)}
                   </Badge>
                   <a
-                    href={getWhatsAppUrl(person.name)}
+                    href={getWhatsAppUrl(transfer.debtorName)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
@@ -259,7 +351,7 @@ export default async function EventPage({ params }: EventPageProps) {
       )}
 
       {/* All Caught Up */}
-      {pendingPayments.length === 0 && balances.length > 0 && (
+      {pendingTransfers.length === 0 && balances.length > 0 && (
         <Card className="mb-4 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
           <CardContent className="py-4 text-center">
             <div className="text-4xl mb-2">🎉</div>

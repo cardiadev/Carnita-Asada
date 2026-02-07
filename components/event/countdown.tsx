@@ -5,7 +5,7 @@ import { useCountdown } from '@/hooks/use-countdown'
 import { formatDateTime, formatDateOnly, formatTimeOnly } from '@/lib/utils/date'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Users, Beef } from 'lucide-react'
+import { MapPin, Users, Beef, Megaphone } from 'lucide-react'
 
 interface CountdownProps {
   targetDate: Date | string
@@ -14,9 +14,10 @@ interface CountdownProps {
   location?: string | null
   mapsUrl?: string | null
   cancelled?: boolean
+  description?: string | null
 }
 
-export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl, cancelled }: CountdownProps) {
+export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl, cancelled, description }: CountdownProps) {
   const { days, hours, minutes, seconds, isExpired } = useCountdown(targetDate)
   const [mounted, setMounted] = useState(false)
 
@@ -139,6 +140,18 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
               <MapPin className="h-4 w-4 text-red-500 group-hover:animate-bounce" />
               <span className="font-semibold text-sm">{location}</span>
             </a>
+          </div>
+        )}
+
+        {description && (
+          <div className="mt-6 mx-auto max-w-md p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-2">
+              <Megaphone className="h-4 w-4" />
+              <span className="font-semibold text-sm">Avisos</span>
+            </div>
+            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line text-sm">
+              {description}
+            </p>
           </div>
         )}
       </CardContent>

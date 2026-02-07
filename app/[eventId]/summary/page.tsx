@@ -44,6 +44,9 @@ interface PersonBalance {
   paid: number
   owes: number
   balance: number
+  paidToOthers: number  // Amount paid via transfers
+  receivedFromOthers: number  // Amount received via transfers
+  netBalance: number  // balance + paidToOthers - receivedFromOthers
   bankInfo?: BankInfo | null
 }
 
@@ -149,11 +152,26 @@ export default function SummaryPage({ params }: SummaryPageProps) {
       const owes = perPerson
       const balance = paid - owes
 
+      // Calculate payments made/received
+      const paidToOthers = payments
+        .filter(p => p.from_attendee_id === attendee.id && p.status === 'completed')
+        .reduce((sum, p) => sum + Number(p.amount), 0)
+
+      const receivedFromOthers = payments
+        .filter(p => p.to_attendee_id === attendee.id && p.status === 'completed')
+        .reduce((sum, p) => sum + Number(p.amount), 0)
+
+      // Net balance considers transfers: if you owed $900 and paid $900, netBalance = 0
+      const netBalance = balance + paidToOthers - receivedFromOthers
+
       return {
         attendee,
         paid,
         owes,
         balance,
+        paidToOthers,
+        receivedFromOthers,
+        netBalance,
         bankInfo: bankInfoMap[attendee.id] || null
       }
     })
@@ -401,7 +419,7 @@ export default function SummaryPage({ params }: SummaryPageProps) {
       </div>
 
       {/* Totales - Visual Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30 shadow-sm overflow-hidden">
           <CardContent className="p-5">
             <div className="flex flex-col gap-1">
@@ -421,10 +439,24 @@ export default function SummaryPage({ params }: SummaryPageProps) {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
                 <Users className="h-4 w-4" />
-                <p className="text-sm font-medium tracking-wide">Toca por persona</p>
+                <p className="text-sm font-medium tracking-wide">Por persona</p>
               </div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(perPerson)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800/30 shadow-sm overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
+                <CreditCard className="h-4 w-4" />
+                <p className="text-sm font-medium tracking-wide">Pagado</p>
+              </div>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {formatCurrency(payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount), 0))}
               </p>
             </div>
           </CardContent>
@@ -466,14 +498,22 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-right">
+                      {/* Show original balance based on expenses */}
                       {b.balance > 0 ? (
                         <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          Le deben {formatCurrency(b.balance)}
+                          Le deben {formatCurrency(b.balance - b.receivedFromOthers)}
                         </Badge>
                       ) : b.balance < 0 ? (
-                        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                          Debe {formatCurrency(Math.abs(b.balance))}
-                        </Badge>
+                        // For debtors: show if they've paid
+                        b.netBalance >= -0.01 ? (
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            ✓ Saldado
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                            Debe {formatCurrency(Math.abs(b.netBalance))}
+                          </Badge>
+                        )
                       ) : (
                         <Badge variant="secondary">A mano</Badge>
                       )}

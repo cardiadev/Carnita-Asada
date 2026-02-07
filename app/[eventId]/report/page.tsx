@@ -23,6 +23,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
     const { eventId } = use(params)
     const [expenses, setExpenses] = useState<ExpenseWithAttendee[]>([])
     const [attendees, setAttendees] = useState<Attendee[]>([])
+    const [payments, setPayments] = useState<Array<{ id: string; amount: number; status: string }>>([])
     const [isLoading, setIsLoading] = useState(true)
 
     const pieChartRef = useRef<SVGSVGElement>(null)
@@ -41,6 +42,11 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                 const expRes = await fetch(`/api/expenses?eventId=${eventId}`)
                 const expData = await expRes.json()
                 if (expRes.ok) setExpenses(expData)
+
+                // Fetch payments
+                const paymentsRes = await fetch(`/api/payments?eventId=${eventId}`)
+                const paymentsData = await paymentsRes.json()
+                if (paymentsRes.ok) setPayments(paymentsData)
             } catch (error) {
                 console.error('Error fetching data:', error)
                 toast.error('Error al cargar los datos')
@@ -61,6 +67,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
     }).filter(p => p.total > 0)
 
     const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
+    const totalPaid = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount), 0)
     const activeAttendees = attendees.filter(a => !a.exclude_from_split)
     const perPerson = activeAttendees.length > 0 ? totalExpenses / activeAttendees.length : 0
 
@@ -339,7 +346,7 @@ export default function ChartsPage({ params }: ChartsPageProps) {
 
             <div className="grid gap-6">
                 {/* Summary Stats at the top */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                     <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 overflow-hidden">
                         <CardContent className="p-4">
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">Total gastado</p>
@@ -353,6 +360,14 @@ export default function ChartsPage({ params }: ChartsPageProps) {
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">Por persona</p>
                             <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                                 ${perPerson.toFixed(2)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 overflow-hidden">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">Pagado</p>
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                ${totalPaid.toFixed(2)}
                             </p>
                         </CardContent>
                     </Card>
