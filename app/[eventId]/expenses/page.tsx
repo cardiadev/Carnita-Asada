@@ -254,6 +254,29 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
 
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
 
+  // Agrupar gastos por persona
+  const expensesByPerson = expenses.reduce((acc, expense) => {
+    const personId = expense.attendee_id || 'sin-asignar'
+    const personName = expense.attendee?.name || 'Sin asignar'
+
+    if (!acc[personId]) {
+      acc[personId] = {
+        personId,
+        personName,
+        total: 0,
+        expenses: []
+      }
+    }
+
+    acc[personId].total += Number(expense.amount)
+    acc[personId].expenses.push(expense)
+
+    return acc
+  }, {} as Record<string, { personId: string; personName: string; total: number; expenses: ExpenseWithAttendee[] }>)
+
+  // Ordenar por total (mayor a menor)
+  const sortedGroups = Object.values(expensesByPerson).sort((a, b) => b.total - a.total)
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       {/* Header: Stack on mobile, horizontal on desktop */}
@@ -424,125 +447,138 @@ export default function ExpensesPage({ params }: ExpensesPageProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {expenses.map((expense) => (
-            <Card key={expense.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                {/* ===== MOBILE LAYOUT ===== */}
-                <div className="flex flex-col gap-3 md:hidden">
-                  {/* Row 1: Description + Amount */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {expense.description}
+        <div className="space-y-6">
+          {sortedGroups.map((group) => (
+            <Card key={group.personId} className="overflow-hidden">
+              {/* Header de persona con total */}
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                      <User className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                        {group.personName}
                       </p>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                        {expense.attendee && (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3.5 w-3.5" />
-                            {expense.attendee.name}
-                          </span>
-                        )}
-                        <span>·</span>
-                        <span>{formatShortDate(expense.created_at)}</span>
-                      </div>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {group.expenses.length} {group.expenses.length === 1 ? 'gasto' : 'gastos'}
+                      </p>
                     </div>
-                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 shrink-0">
-                      {formatCurrency(Number(expense.amount))}
-                    </p>
                   </div>
-
-                  {/* Row 2: Receipt button (full width) */}
-                  {expense.receipt_url && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSelectedReceipt(expense.receipt_url!)}
-                      className="w-full h-9 text-sm gap-1.5"
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                      Ver comprobante
-                    </Button>
-                  )}
-
-                  {/* Row 3: Action buttons (distributed) */}
-                  <div className="flex items-center justify-between gap-2 -mx-2 px-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleEditClick(expense)}
-                      title="Editar"
-                      className="flex-1 h-10 gap-2"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="text-sm">Editar</span>
-                    </Button>
-                    <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleDelete(expense.id)}
-                      className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="text-sm">Borrar</span>
-                    </Button>
-                  </div>
+                  <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                    {formatCurrency(group.total)}
+                  </p>
                 </div>
+              </div>
 
-                {/* ===== DESKTOP LAYOUT ===== */}
-                <div className="hidden md:flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {expense.description}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                      {expense.attendee && (
-                        <span className="flex items-center gap-1">
-                          <User className="h-3.5 w-3.5" />
-                          {expense.attendee.name}
-                        </span>
-                      )}
-                      <span>·</span>
-                      <span>{formatShortDate(expense.created_at)}</span>
-                    </div>
-                    {expense.receipt_url && (
-                      <div className="mt-2">
+              {/* Lista de gastos de esta persona */}
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {group.expenses.map((expense) => (
+                  <div key={expense.id} className="p-4">
+                    {/* ===== MOBILE LAYOUT ===== */}
+                    <div className="flex flex-col gap-3 md:hidden">
+                      {/* Row 1: Description + Amount */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                            {expense.description}
+                          </p>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                            {formatShortDate(expense.created_at)}
+                          </p>
+                        </div>
+                        <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 shrink-0">
+                          {formatCurrency(Number(expense.amount))}
+                        </p>
+                      </div>
+
+                      {/* Row 2: Receipt button (full width) */}
+                      {expense.receipt_url && (
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => setSelectedReceipt(expense.receipt_url!)}
-                          className="h-8 text-sm gap-1.5"
+                          className="w-full h-9 text-sm gap-1.5"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           Ver comprobante
                         </Button>
+                      )}
+
+                      {/* Row 3: Action buttons (distributed) */}
+                      <div className="flex items-center justify-between gap-2 -mx-2 px-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleEditClick(expense)}
+                          title="Editar"
+                          className="flex-1 h-10 gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="text-sm">Editar</span>
+                        </Button>
+                        <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleDelete(expense.id)}
+                          className="flex-1 h-10 gap-2 text-red-500 hover:text-red-600"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="text-sm">Borrar</span>
+                        </Button>
                       </div>
-                    )}
+                    </div>
+
+                    {/* ===== DESKTOP LAYOUT ===== */}
+                    <div className="hidden md:flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                          {expense.description}
+                        </p>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                          {formatShortDate(expense.created_at)}
+                        </p>
+                        {expense.receipt_url && (
+                          <div className="mt-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setSelectedReceipt(expense.receipt_url!)}
+                              className="h-8 text-sm gap-1.5"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              Ver comprobante
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                          {formatCurrency(Number(expense.amount))}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(expense)}
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(expense.id)}
+                          className="text-red-500 hover:text-red-600"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                      {formatCurrency(Number(expense.amount))}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(expense)}
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(expense.id)}
-                      className="text-red-500 hover:text-red-600"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
+                ))}
+              </div>
             </Card>
           ))}
         </div>
