@@ -335,16 +335,25 @@ export default function SummaryPage({ params }: SummaryPageProps) {
     }
   }
 
-  // Group transfers by debtor - proper settlement algorithm
-  const getGroupedTransfers = () => {
-    // Create mutable copies of balances
-    const debtorBalances = balances
-      .filter(b => b.balance < 0)
-      .map(b => ({ ...b, remaining: Math.abs(b.balance) }))
+  // Get total amount paid between two attendees (all completed payments)
+  const getTotalPaidBetween = (fromId: string, toId: string) => {
+    return payments
+      .filter(p => p.from_attendee_id === fromId && p.to_attendee_id === toId && p.status === 'completed')
+      .reduce((sum, p) => sum + Number(p.amount), 0)
+  }
 
+  // Group transfers by debtor - proper settlement algorithm using NET balances
+  const getGroupedTransfers = () => {
+    // Use netBalance to consider payments already made
+    // Debtors: people who still owe money (netBalance < 0)
+    const debtorBalances = balances
+      .filter(b => b.netBalance < -0.01) // Still owes money
+      .map(b => ({ ...b, remaining: Math.abs(b.netBalance) }))
+
+    // Creditors: people who are still owed money (netBalance > 0)
     const creditorBalances = balances
-      .filter(b => b.balance > 0)
-      .map(b => ({ ...b, remaining: b.balance }))
+      .filter(b => b.netBalance > 0.01) // Still owed money
+      .map(b => ({ ...b, remaining: b.netBalance }))
 
     // Calculate transfers for each debtor
     return debtorBalances.map(debtor => {
@@ -352,21 +361,24 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         creditor: PersonBalance
         amount: number
         isPaid: boolean
+        alreadyPaid: number
         transferId: string
       }> = []
 
       let debtRemaining = debtor.remaining
 
       for (const creditor of creditorBalances) {
-        if (debtRemaining <= 0 || creditor.remaining <= 0) continue
+        if (debtRemaining <= 0.01 || creditor.remaining <= 0.01) continue
 
         const transferAmount = Math.min(debtRemaining, creditor.remaining)
+        const alreadyPaid = getTotalPaidBetween(debtor.attendee.id, creditor.attendee.id)
 
         if (transferAmount > 0.01) { // Avoid tiny amounts due to floating point
           transfers.push({
             creditor,
             amount: transferAmount,
-            isPaid: isTransferPaid(debtor.attendee.id, creditor.attendee.id),
+            isPaid: false, // These are pending transfers
+            alreadyPaid,
             transferId: `${debtor.attendee.id}-${creditor.attendee.id}`
           })
 
@@ -377,9 +389,25 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
       return {
         debtor,
+        originalDebt: Math.abs(debtor.balance), // Original debt before any payments
         transfers
       }
     })
+  }
+
+  // Get completed payments for display
+  const getCompletedPayments = () => {
+    return payments
+      .filter(p => p.status === 'completed')
+      .map(p => {
+        const fromAttendee = attendees.find(a => a.id === p.from_attendee_id)
+        const toAttendee = attendees.find(a => a.id === p.to_attendee_id)
+        return {
+          ...p,
+          fromName: fromAttendee?.name || 'Desconocido',
+          toName: toAttendee?.name || 'Desconocido'
+        }
+      })
   }
 
   if (isLoading) {
@@ -448,19 +476,40 @@ export default function SummaryPage({ params }: SummaryPageProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800/30 shadow-sm overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
-                <CreditCard className="h-4 w-4" />
-                <p className="text-sm font-medium tracking-wide">Pagado</p>
-              </div>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                {formatCurrency(payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount), 0))}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {(() => {
+          const pendingAmount = balances.filter(b => b.netBalance < 0).reduce((sum, b) => sum + Math.abs(b.netBalance), 0)
+          const transferredAmount = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount), 0)
+          const isAllPaid = pendingAmount < 0.01 && transferredAmount > 0
+
+          return (
+            <Card className={`${isAllPaid
+              ? 'bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800/30'
+              : 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30'
+            } shadow-sm overflow-hidden`}>
+              <CardContent className="p-5">
+                <div className="flex flex-col gap-1">
+                  <div className={`flex items-center gap-2 mb-1 ${isAllPaid
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    <CreditCard className="h-4 w-4" />
+                    <p className="text-sm font-medium tracking-wide">
+                      {isAllPaid ? 'Todo pagado' : 'Por liquidar'}
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                    {formatCurrency(isAllPaid ? transferredAmount : pendingAmount)}
+                  </p>
+                  {!isAllPaid && transferredAmount > 0 && (
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Transferido: {formatCurrency(transferredAmount)}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
       </div>
 
       {/* Balances por persona */}
@@ -498,24 +547,22 @@ export default function SummaryPage({ params }: SummaryPageProps) {
 
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-right">
-                      {/* Show original balance based on expenses */}
-                      {b.balance > 0 ? (
+                      {/* Show balance status based on netBalance (considers payments made/received) */}
+                      {b.netBalance > 0.01 ? (
+                        // Still owed money
                         <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          Le deben {formatCurrency(b.balance - b.receivedFromOthers)}
+                          Le deben {formatCurrency(b.netBalance)}
                         </Badge>
-                      ) : b.balance < 0 ? (
-                        // For debtors: show if they've paid
-                        b.netBalance >= -0.01 ? (
-                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                            ✓ Saldado
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                            Debe {formatCurrency(Math.abs(b.netBalance))}
-                          </Badge>
-                        )
+                      ) : b.netBalance < -0.01 ? (
+                        // Still owes money
+                        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                          Debe {formatCurrency(Math.abs(b.netBalance))}
+                        </Badge>
                       ) : (
-                        <Badge variant="secondary">A mano</Badge>
+                        // Settled (netBalance ~= 0)
+                        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          ✓ Saldado
+                        </Badge>
                       )}
                     </div>
                     <Button
@@ -572,36 +619,78 @@ export default function SummaryPage({ params }: SummaryPageProps) {
         </Card>
       )}
 
-      {/* Transferencias sugeridas - Agrupadas por deudor */}
-      {balances.some(b => b.balance !== 0) && (
+      {/* Pagos realizados */}
+      {getCompletedPayments().length > 0 && (
+        <Card className="mt-6 overflow-hidden">
+          <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-green-50/50 dark:bg-green-900/10">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Pagos realizados
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3">
+            {getCompletedPayments().map((payment) => (
+              <div
+                key={payment.id}
+                className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{payment.fromName}</span>
+                  <span className="text-zinc-500">→</span>
+                  <span className="font-medium">{payment.toName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-green-500">{formatCurrency(payment.amount)}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => undoPayment(payment.from_attendee_id, payment.to_attendee_id)}
+                    disabled={savingPayment === `${payment.from_attendee_id}-${payment.to_attendee_id}`}
+                    className="text-zinc-500 hover:text-zinc-700 h-8 px-2"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Transferencias pendientes - Agrupadas por deudor */}
+      {getGroupedTransfers().length > 0 && (
         <Card className="mt-6 overflow-hidden">
           <CardHeader className="p-4 pb-2 border-b border-zinc-50 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-800/20">
-            <CardTitle className="text-lg">Transferencias sugeridas</CardTitle>
+            <CardTitle className="text-lg">Transferencias pendientes</CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-6">
-            {getGroupedTransfers().map(({ debtor, transfers }) => (
+            {getGroupedTransfers().map(({ debtor, originalDebt, transfers }) => (
               <div key={debtor.attendee.id} className="space-y-3">
                 {/* Debtor Header */}
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-700">
                   <p className="font-medium text-zinc-900 dark:text-zinc-100">
                     {debtor.attendee.name}
                   </p>
-                  <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                    Debe: {formatCurrency(Math.abs(debtor.balance))}
-                  </p>
+                  <div className="text-right">
+                    <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                      Debe: {formatCurrency(Math.abs(debtor.netBalance))}
+                    </p>
+                    {debtor.paidToOthers > 0 && (
+                      <p className="text-xs text-zinc-500">
+                        (Original: {formatCurrency(originalDebt)}, ya pagó: {formatCurrency(debtor.paidToOthers)})
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Transfers for this debtor */}
-                {transfers.map(({ creditor, amount, isPaid, transferId }) => {
+                {transfers.map(({ creditor, amount, alreadyPaid, transferId }) => {
                   const isSaving = savingPayment === transferId
 
                   return (
                     <div
                       key={transferId}
-                      className={`p-4 rounded-lg border ${isPaid
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                        }`}
+                      className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
                     >
                       {/* Header: Name + Amount on same line */}
                       <div className="flex items-center justify-between mb-3">
@@ -609,75 +698,60 @@ export default function SummaryPage({ params }: SummaryPageProps) {
                           <span className="text-zinc-500">→</span>
                           <span className="font-medium">{creditor.attendee.name}</span>
                         </div>
-                        <Badge className={isPaid ? 'bg-green-500' : 'bg-blue-500'}>
-                          {formatCurrency(amount)}
-                        </Badge>
+                        <div className="text-right">
+                          <Badge className="bg-blue-500">
+                            {formatCurrency(amount)}
+                          </Badge>
+                          {alreadyPaid > 0 && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Ya pagó: {formatCurrency(alreadyPaid)}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Actions - Stack on mobile */}
                       <div className="flex flex-col md:flex-row gap-2">
-                        {!isPaid && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full md:flex-1"
-                              onClick={() => sendWhatsApp(creditor.attendee.name, amount, creditor.bankInfo)}
-                            >
-                              <MessageCircle className="h-4 w-4 mr-2" />
-                              WhatsApp
-                            </Button>
-                            {creditor.bankInfo && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full md:flex-1"
-                                onClick={() => {
-                                  setSelectedBankInfo({
-                                    name: creditor.attendee.name,
-                                    info: creditor.bankInfo!
-                                  })
-                                  setShowBankInfoModal(true)
-                                }}
-                              >
-                                <CreditCard className="h-4 w-4 mr-2" />
-                                <span className="md:hidden">Ver datos bancarios</span>
-                                <span className="hidden md:inline">Ver datos</span>
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="w-full md:flex-1 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 font-bold text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-all"
-                              onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, amount)}
-                              disabled={isSaving}
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              {isSaving ? 'Guardando...' : 'Marcar pagado'}
-                            </Button>
-                          </>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full md:flex-1"
+                          onClick={() => sendWhatsApp(creditor.attendee.name, amount, creditor.bankInfo)}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          WhatsApp
+                        </Button>
+                        {creditor.bankInfo && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full md:flex-1"
+                            onClick={() => {
+                              setSelectedBankInfo({
+                                name: creditor.attendee.name,
+                                info: creditor.bankInfo!
+                              })
+                              setShowBankInfoModal(true)
+                            }}
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            <span className="md:hidden">Ver datos bancarios</span>
+                            <span className="hidden md:inline">Ver datos</span>
+                          </Button>
                         )}
-                        {isPaid && (
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                              <CheckCircle2 className="h-5 w-5" />
-                              <span className="font-medium">Pagado</span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => undoPayment(debtor.attendee.id, creditor.attendee.id)}
-                              disabled={isSaving}
-                              className="text-zinc-500 hover:text-zinc-700"
-                            >
-                              <Undo2 className="h-4 w-4 mr-1" />
-                              Deshacer
-                            </Button>
-                          </div>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full md:flex-1 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 font-bold text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-all"
+                          onClick={() => markAsPaid(debtor.attendee.id, creditor.attendee.id, amount)}
+                          disabled={isSaving}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          {isSaving ? 'Guardando...' : 'Marcar pagado'}
+                        </Button>
                       </div>
 
-                      {!creditor.bankInfo && !isPaid && (
+                      {!creditor.bankInfo && (
                         <div className="mt-2">
                           <Button
                             variant="outline"

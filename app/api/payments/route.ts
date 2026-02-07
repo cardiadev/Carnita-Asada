@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
@@ -78,6 +79,11 @@ export async function POST(request: NextRequest) {
                 .single()
 
             if (error) throw error
+
+            // Revalidate the event page to update the UI
+            revalidatePath(`/${eventId}`)
+            revalidatePath(`/${eventId}/summary`)
+
             return NextResponse.json(data)
         }
 
@@ -95,6 +101,10 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (error) throw error
+
+        // Revalidate the event page to update the UI
+        revalidatePath(`/${eventId}`)
+        revalidatePath(`/${eventId}/summary`)
 
         return NextResponse.json(data, { status: 201 })
     } catch (error) {
@@ -114,12 +124,34 @@ export async function DELETE(request: NextRequest) {
     try {
         const supabase = await createClient()
 
+        // First get the payment to find the event
+        const { data: payment } = await supabase
+            .from('payments')
+            .select('event_id')
+            .eq('id', paymentId)
+            .single()
+
         const { error } = await supabase
             .from('payments')
             .delete()
             .eq('id', paymentId)
 
         if (error) throw error
+
+        // Revalidate if we found the event
+        if (payment?.event_id) {
+            // Get nano_id for the event
+            const { data: event } = await supabase
+                .from('events')
+                .select('nano_id')
+                .eq('id', payment.event_id)
+                .single()
+
+            if (event?.nano_id) {
+                revalidatePath(`/${event.nano_id}`)
+                revalidatePath(`/${event.nano_id}/summary`)
+            }
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {

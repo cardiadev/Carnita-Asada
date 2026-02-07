@@ -85,6 +85,32 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
               {formatDateTime(targetDate)}
             </p>
           </div>
+
+          {location && mapsUrl && (
+            <div className="mt-6 flex justify-center">
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all group"
+              >
+                <MapPin className="h-4 w-4 text-red-500 group-hover:animate-bounce" />
+                <span className="font-semibold text-sm">{location}</span>
+              </a>
+            </div>
+          )}
+
+          {description && (
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center gap-2 text-red-600 dark:text-red-400 mb-1">
+                <Megaphone className="h-4 w-4" />
+                <span className="font-bold text-sm uppercase tracking-wide">Aviso</span>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-line max-w-md mx-auto">
+                {description}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     )
@@ -104,6 +130,32 @@ export function Countdown({ targetDate, title, attendeesCount, location, mapsUrl
               {formatDateTime(targetDate)}
             </p>
           </div>
+
+          {location && mapsUrl && (
+            <div className="mt-6 flex justify-center">
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all group"
+              >
+                <MapPin className="h-4 w-4 text-red-500 group-hover:animate-bounce" />
+                <span className="font-semibold text-sm">{location}</span>
+              </a>
+            </div>
+          )}
+
+          {description && (
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center gap-2 text-red-600 dark:text-red-400 mb-1">
+                <Megaphone className="h-4 w-4" />
+                <span className="font-bold text-sm uppercase tracking-wide">Aviso</span>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-line max-w-md mx-auto">
+                {description}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     )

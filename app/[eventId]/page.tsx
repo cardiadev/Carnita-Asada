@@ -32,6 +32,9 @@ interface PersonBalance {
   attendeeId: string
   paid: number
   balance: number
+  netBalance: number
+  transferredOut: number
+  transferredIn: number
 }
 
 interface Payment {
@@ -107,25 +110,52 @@ export default async function EventPage({ params }: EventPageProps) {
     .eq('status', 'completed')
 
   const payments = paymentsData as Payment[] | null
-  const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
+  const totalTransferred = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
   const attendeesCount = event.attendees?.length || 0
   const activeAttendees = event.attendees?.filter((a) => !a.exclude_from_split) || []
   const activeCount = activeAttendees.length
   const perPerson = activeCount > 0 ? totalExpenses / activeCount : 0
 
-  // Calcular quién falta por pagar
+  // Calcular quién falta por pagar (considerando transferencias ya hechas)
   const balances: PersonBalance[] = activeAttendees.map(attendee => {
     const paid = expenses
       ?.filter(e => e.attendee_id === attendee.id)
       .reduce((sum, e) => sum + Number(e.amount), 0) || 0
 
+    // Pagos realizados (transferencias hechas por esta persona)
+    const transferredOut = payments
+      ?.filter(p => p.from_attendee_id === attendee.id)
+      .reduce((sum, p) => sum + Number(p.amount), 0) || 0
+
+    // Pagos recibidos (transferencias recibidas por esta persona)
+    const transferredIn = payments
+      ?.filter(p => p.to_attendee_id === attendee.id)
+      .reduce((sum, p) => sum + Number(p.amount), 0) || 0
+
+    const originalBalance = paid - perPerson
+    // netBalance considera las transferencias: si debías $900 y transferiste $900, netBalance = 0
+    const netBalance = originalBalance + transferredOut - transferredIn
+
     return {
       name: attendee.name,
       attendeeId: attendee.id,
       paid,
-      balance: paid - perPerson
+      balance: originalBalance,
+      netBalance,
+      transferredOut,
+      transferredIn
     }
   })
+
+  // Total por liquidar = suma de deudas pendientes (netBalance negativo)
+  const totalPending = balances
+    .filter(b => b.netBalance < 0)
+    .reduce((sum, b) => sum + Math.abs(b.netBalance), 0)
+
+  // Total de deuda original (sin considerar pagos)
+  const totalOriginalDebt = balances
+    .filter(b => b.balance < 0)
+    .reduce((sum, b) => sum + Math.abs(b.balance), 0)
 
   // Helper: Check if a specific transfer is paid
   const isTransferPaid = (fromId: string, toId: string) => {
@@ -136,36 +166,36 @@ export default async function EventPage({ params }: EventPageProps) {
     ) || false
   }
 
-  // Calculate all transfers using settlement algorithm
-  const calculateAllTransfers = (): PendingTransfer[] => {
-    const allTransfers: PendingTransfer[] = []
+  // Calculate pending transfers using settlement algorithm (based on netBalance)
+  const calculatePendingTransfers = (): PendingTransfer[] => {
+    const pendingTransfers: PendingTransfer[] = []
 
-    // Create mutable copies of balances
+    // Use netBalance to only show what's still pending
     const debtorBalances = balances
-      .filter(b => b.balance < 0)
-      .map(b => ({ ...b, remaining: Math.abs(b.balance) }))
+      .filter(b => b.netBalance < -0.01)  // Still owes money
+      .map(b => ({ ...b, remaining: Math.abs(b.netBalance) }))
 
     const creditorBalances = balances
-      .filter(b => b.balance > 0)
-      .map(b => ({ ...b, remaining: b.balance }))
+      .filter(b => b.netBalance > 0.01)  // Still owed money
+      .map(b => ({ ...b, remaining: b.netBalance }))
 
     // Calculate transfers for each debtor
     for (const debtor of debtorBalances) {
       let debtRemaining = debtor.remaining
 
       for (const creditor of creditorBalances) {
-        if (debtRemaining <= 0 || creditor.remaining <= 0) continue
+        if (debtRemaining <= 0.01 || creditor.remaining <= 0.01) continue
 
         const transferAmount = Math.min(debtRemaining, creditor.remaining)
 
         if (transferAmount > 0.01) {
-          allTransfers.push({
+          pendingTransfers.push({
             debtorId: debtor.attendeeId,
             debtorName: debtor.name,
             creditorId: creditor.attendeeId,
             creditorName: creditor.name,
             amount: transferAmount,
-            isPaid: isTransferPaid(debtor.attendeeId, creditor.attendeeId)
+            isPaid: false  // These are all pending
           })
 
           debtRemaining -= transferAmount
@@ -174,21 +204,15 @@ export default async function EventPage({ params }: EventPageProps) {
       }
     }
 
-    return allTransfers
+    return pendingTransfers
   }
 
-  const allTransfers = calculateAllTransfers()
-  const pendingTransfers = allTransfers.filter(t => !t.isPaid)
-  const completedTransfers = allTransfers.filter(t => t.isPaid)
+  const pendingTransfers = calculatePendingTransfers()
 
-  // Group pending transfers by debtor for display
-  const pendingDebtors = [...new Set(pendingTransfers.map(t => t.debtorId))]
-  const completedDebtors = balances
-    .filter(b => b.balance >= 0 || !pendingDebtors.includes(b.attendeeId))
-  const pendingPayments = balances
-    .filter(b => pendingDebtors.includes(b.attendeeId))
-  const completedPayments = balances
-    .filter(b => !pendingDebtors.includes(b.attendeeId))
+  // Personas que ya están al día (netBalance >= 0)
+  const peopleSettled = balances.filter(b => b.netBalance >= -0.01)
+  // Personas que aún deben (netBalance < 0)
+  const peopleWithDebt = balances.filter(b => b.netBalance < -0.01)
 
   // WhatsApp reminder function
   const getWhatsAppUrl = (personName: string) => {
@@ -250,32 +274,39 @@ export default async function EventPage({ params }: EventPageProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800/30 shadow-xl shadow-green-100/50 dark:shadow-none border-2">
+        <Card className={`${totalPending > 0 ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30 shadow-xl shadow-red-100/50' : 'bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800/30 shadow-xl shadow-green-100/50'} dark:shadow-none border-2`}>
           <CardContent className="p-5">
             <div className="flex flex-col">
-              <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 mb-1">
-                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <p className="text-base font-bold tracking-wide">Pagado</p>
+              <div className={`flex items-center gap-2 mb-1 ${totalPending > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                <DollarSign className="h-5 w-5" />
+                <p className="text-base font-bold tracking-wide">
+                  {totalPending > 0 ? 'Por liquidar' : 'Liquidado'}
+                </p>
               </div>
               <p className="text-3xl font-black text-zinc-900 dark:text-zinc-100 leading-none">
-                {formatCurrency(totalPaid)}
+                {formatCurrency(totalPending > 0 ? totalPending : totalTransferred)}
               </p>
+              {totalTransferred > 0 && totalPending > 0 && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  Transferido: {formatCurrency(totalTransferred)}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Payment Progress */}
-      {balances.length > 0 && (
+      {balances.length > 0 && totalOriginalDebt > 0 && (
         <Card className="mb-4 border-zinc-200 dark:border-zinc-700">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base flex items-center justify-between font-semibold text-zinc-700 dark:text-zinc-300">
               <div className="flex items-center gap-2">
                 <PieChart className="h-5 w-5 text-blue-500" />
-                Estado de pagos
+                Progreso de liquidación
               </div>
               <Badge variant="secondary" className="font-normal">
-                {completedPayments.length}/{balances.length} al día
+                {formatCurrency(totalTransferred)} / {formatCurrency(totalOriginalDebt)}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -283,9 +314,12 @@ export default async function EventPage({ params }: EventPageProps) {
             <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 rounded-full transition-all duration-500"
-                style={{ width: `${(completedPayments.length / balances.length) * 100}%` }}
+                style={{ width: `${Math.min((totalTransferred / totalOriginalDebt) * 100, 100)}%` }}
               />
             </div>
+            <p className="text-xs text-zinc-500 mt-2">
+              {peopleSettled.length} de {balances.length} personas al día
+            </p>
           </CardContent>
         </Card>
       )}
